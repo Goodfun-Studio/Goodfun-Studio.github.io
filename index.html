@@ -235,6 +235,20 @@
   #contact .divider{background:rgba(244,241,234,.15)}
   .contact-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:60px;align-items:center}
   .contact-lead{font-size:22px;font-weight:300;line-height:1.7;color:rgba(244,241,234,.85);max-width:24em}
+  .reply-time{
+    margin-top:24px;display:inline-flex;align-items:center;gap:10px;
+    font-size:14px;letter-spacing:2px;color:rgba(244,241,234,.7);
+    border:1px solid rgba(244,241,234,.18);border-radius:30px;padding:9px 18px;
+  }
+  .dot-live{
+    width:8px;height:8px;border-radius:50%;background:#5fb87a;flex:none;
+    box-shadow:0 0 0 0 rgba(95,184,122,.6);animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(95,184,122,.55)}
+    70%{box-shadow:0 0 0 9px rgba(95,184,122,0)}
+    100%{box-shadow:0 0 0 0 rgba(95,184,122,0)}
+  }
   .contact-list{display:flex;flex-direction:column;gap:4px}
   .c-row{
     display:flex;justify-content:space-between;align-items:center;gap:20px;
@@ -299,7 +313,7 @@
     </a>
     <nav class="menu" id="menu">
       <a href="#works">项目展示</a>
-      <a href="#about">关于我们</a>
+      <a href="#about">关于我</a>
       <a href="#services">服务合作</a>
       <a href="#contact">联系方式</a>
     </nav>
@@ -325,10 +339,10 @@
     <div class="hero-left">
       <span class="eyebrow">GOODFUN STUDIO · 软件与创意</span>
       <h1 class="title"><span class="l1">写代码，</span><span class="l2">也写意。</span></h1>
-      <p class="lead">good fun 是一个以「OPC」为名的一人工作室。从产品构想到代码落地，承接网站、小程序、应用、自动化与各类软件相关业务——以匠人之心，待每一次合作。</p>
+      <p class="lead">good fun（谷放）是一家 OPC（一人公司）——从产品构想到代码落地，由我一个人对接、设计、开发、交付。承接网站、小程序、应用、自动化与各类软件业务，以匠人之心，待每一次合作。</p>
       <div class="hero-cta">
         <a class="btn primary" href="#works">看看作品 →</a>
-        <a class="btn ghost" href="#contact">商务洽谈</a>
+        <a class="btn ghost" href="#contact">聊聊你的想法</a>
       </div>
     </div>
     <div class="persona">
@@ -393,20 +407,21 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="sec-no">贰 / 02</span>
-      <h2 class="sec-title">关于我们</h2>
-      <span class="sec-en">About</span>
+      <h2 class="sec-title">关于我</h2>
+      <span class="sec-en">About Me</span>
     </div>
     <div class="divider reveal"></div>
     <div class="about-grid">
       <div class="about-text reveal">
-        <p>good fun（谷放）是一个独立软件工作室，专注编程开发与软件外包。名字取自「good fun」的谐音，也意为在繁杂的代码与需求里，拾起那一点真正有趣的东西。</p>
-        <div class="pull">不做流水线的活儿，<br>只做能让人会心一笑的产品。</div>
-        <p>我们相信好的软件既要扎实可靠，也要有审美与温度。无论是网站、应用、小程序，还是 AI 与自动化，都欢迎前来咨询——从一个想法开始，一起把它做成型。</p>
+        <p>你好，我是 good fun（谷放）背后的那个人。这是一家 <b>OPC（One Person Company，一人公司）</b>——没有团队、没有中间环节，从需求沟通到设计、开发、上线，全程由我一个人负责。</p>
+        <p>我有 <b>X 年</b>软件开发经验，主要技术栈是 <b>前端（React / Vue）、后端（Node / Python）、小程序与 AI 集成</b>。做过从 0 到 1 的产品，也接过各类外包与定制需求。</p>
+        <div class="pull">选择一人公司，<br>是想把沟通成本降到最低，<br>把品质握在自己手里。</div>
+        <p>客户找我，往往不是因为「谷放」这个名字，而是因为能直接和动手的人聊——想法不会在层层转述里走样，改一版也不用排期等档。我相信好软件既要扎实可靠，也要有审美与温度。</p>
       </div>
       <div class="stats reveal">
-        <div class="stat"><b>全栈</b><span>独立交付</span></div>
-        <div class="stat"><b>1v1</b><span>主理人对接</span></div>
-        <div class="stat"><b>∞</b><span>软件业务可咨询</span></div>
+        <div class="stat"><b>X 年</b><span>开发经验</span></div>
+        <div class="stat"><b>1v1</b><span>本人直接对接</span></div>
+        <div class="stat"><b>全栈</b><span>独立设计交付</span></div>
         <div class="stat"><b>用心</b><span>每一个项目</span></div>
       </div>
     </div>
@@ -460,9 +475,10 @@
     <div class="divider reveal"></div>
     <div class="contact-grid">
       <div class="reveal">
-        <p class="contact-lead">有想法、有项目，或只是想聊聊？欢迎随时联系。我们偏好先聊清楚再动手，让每一分预算都花在刀刃上。</p>
+        <p class="contact-lead">有想法、有项目，或只是想聊聊？欢迎随时找我。我偏好先聊清楚再动手，让每一分预算都花在刀刃上。</p>
+        <div class="reply-time"><span class="dot-live"></span>通常 24 小时内回复 · 本人亲自对接</div>
         <div class="contact-cta">
-          <a class="btn primary" href="mailto:hello@goodfun.studio">发起商务洽谈 →</a>
+          <a class="btn primary" href="mailto:hello@goodfun.studio">聊聊你的想法 →</a>
         </div>
       </div>
       <div class="contact-list reveal">
