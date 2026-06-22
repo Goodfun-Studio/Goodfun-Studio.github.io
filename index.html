@@ -284,8 +284,30 @@
   .contact-cta .btn.primary{background:var(--cinnabar);border-color:var(--cinnabar)}
   .contact-cta .btn.primary:hover{background:var(--paper);color:var(--ink);border-color:var(--paper)}
 
-  footer{padding:44px 0;text-align:center;background:var(--ink);color:rgba(244,241,234,.5);font-size:13px;letter-spacing:2px}
-  footer .seal-sm{display:inline-block;width:24px;height:24px;background:var(--cinnabar);color:var(--paper);border-radius:4px;line-height:24px;font-weight:700;margin-right:8px;vertical-align:middle}
+  /* footer：比 contact 更深一档 + 顶部细线分隔 */
+  footer{
+    background:#121212;color:rgba(244,241,234,.5);
+    border-top:1px solid rgba(244,241,234,.12);
+    padding:54px 0 40px;text-align:center;position:relative;
+  }
+  .to-top{
+    position:absolute;top:-23px;left:50%;transform:translateX(-50%);
+    width:46px;height:46px;border-radius:50%;
+    background:var(--cinnabar);color:var(--paper);
+    display:grid;place-items:center;font-size:18px;
+    box-shadow:0 8px 22px rgba(168,51,42,.35);
+    transition:transform .35s cubic-bezier(.2,.7,.3,1),background .35s;
+  }
+  .to-top:hover{transform:translateX(-50%) translateY(-4px);background:var(--cinnabar-soft)}
+  .foot-slogan{
+    font-size:22px;font-weight:500;letter-spacing:3px;color:rgba(244,241,234,.92);
+    margin-bottom:10px;
+  }
+  .foot-slogan .c{color:var(--cinnabar-soft)}
+  .foot-sub{font-size:14px;letter-spacing:4px;color:rgba(244,241,234,.4);margin-bottom:30px}
+  .foot-copy{font-size:13px;letter-spacing:2px;color:rgba(244,241,234,.4)}
+  .foot-copy a{color:rgba(244,241,234,.6);transition:color .3s}
+  .foot-copy a:hover{color:var(--cinnabar-soft)}
 
   /* reveal on scroll */
   .reveal{opacity:0;transform:translateY(40px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.3,1)}
@@ -527,7 +549,10 @@
 </section>
 
 <footer>
-  good fun studio · 谷放工作室 © 2026 · 编程开发 · 独立开发
+  <a class="to-top" href="#top" aria-label="回到顶部">↑</a>
+  <p class="foot-slogan">写<span class="c">代码</span>，也写意。</p>
+  <p class="foot-sub">编程开发 · 独立开发 · 一人公司</p>
+  <p class="foot-copy">good fun studio · 谷放工作室 © 2026 · <a href="#top">回到顶部 ↑</a></p>
 </footer>
 
 <script>
