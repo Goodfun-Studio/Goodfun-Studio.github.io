@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>good fun · 拾趣</title>
+<meta name="description" content="Goodfun Studio · 拾趣工作室。一人执笔，承接各类软件相关业务。水墨之间，写代码亦写意。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --ink-soft:#3a3733;
+    --ink-faint:#6b6660;
+    --paper:#f4f1ea;
+    --paper-warm:#ece6d8;
+    --cinnabar:#a8332a;
+    --cinnabar-soft:#c25a4a;
+    --line:rgba(26,26,26,.12);
+    --serif:"Noto Serif SC", "Songti SC", "STSong", serif;
+    --w:1180px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--serif);
+    color:var(--ink);
+    background:var(--paper);
+    line-height:1.85;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* paper grain */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background:
+      radial-gradient(circle at 18% 22%, rgba(168,51,42,.04), transparent 38%),
+      radial-gradient(circle at 82% 78%, rgba(26,26,26,.05), transparent 42%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  }
+  ::selection{background:var(--cinnabar);color:var(--paper)}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 32px;position:relative;z-index:1}
+
+  /* ---------- vertical seal / brand rail ---------- */
+  header.nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    backdrop-filter:blur(6px);
+    background:linear-gradient(to bottom, rgba(244,241,234,.92), rgba(244,241,234,.5) 70%, transparent);
+    transition:padding .4s ease;
+  }
+  .nav-inner{
+    max-width:var(--w);margin:0 auto;padding:22px 32px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .seal{
+    width:46px;height:46px;flex:none;border-radius:8px;
+    background:var(--cinnabar);color:var(--paper);
+    display:grid;place-items:center;
+    font-weight:700;font-size:21px;letter-spacing:1px;
+    box-shadow:0 4px 18px rgba(168,51,42,.28);
+    writing-mode:vertical-rl;line-height:1;padding:5px 0;
+  }
+  .brand-txt b{font-weight:600;font-size:18px;letter-spacing:3px;display:block}
+  .brand-txt span{font-size:11px;letter-spacing:4px;color:var(--ink-faint);text-transform:uppercase}
+  nav.menu{display:flex;gap:38px}
+  nav.menu a{font-size:15px;letter-spacing:2px;color:var(--ink-soft);position:relative;padding:4px 0;transition:color .3s}
+  nav.menu a::after{
+    content:"";position:absolute;left:0;bottom:-2px;width:0;height:1.5px;
+    background:var(--cinnabar);transition:width .35s ease;
+  }
+  nav.menu a:hover{color:var(--cinnabar)}
+  nav.menu a:hover::after{width:100%}
+  .menu-toggle{display:none;background:none;border:0;cursor:pointer;font-size:24px;color:var(--ink)}
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:100vh;display:flex;align-items:center;position:relative;
+    padding:120px 0 80px;
+  }
+  /* large ink stroke backdrop */
+  .hero-ink{
+    position:absolute;right:-4%;top:50%;transform:translateY(-50%);
+    width:min(720px,62vw);height:auto;opacity:.9;pointer-events:none;z-index:0;
+  }
+  .hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+  .hero-vert{
+    writing-mode:vertical-rl;text-orientation:upright;
+    position:absolute;left:34px;top:50%;transform:translateY(-50%);
+    font-size:13px;letter-spacing:8px;color:var(--ink-faint);z-index:2;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:12px;
+    font-size:13px;letter-spacing:5px;color:var(--cinnabar);margin-bottom:28px;
+    opacity:0;transform:translateY(14px);animation:rise .9s .1s forwards;
+  }
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--cinnabar)}
+  h1.title{
+    font-size:clamp(56px,9vw,128px);font-weight:900;line-height:.98;letter-spacing:4px;
+    color:var(--ink);
+  }
+  h1.title .l1{display:block;opacity:0;transform:translateY(26px);animation:rise 1s .2s forwards}
+  h1.title .l2{display:block;color:var(--cinnabar);opacity:0;transform:translateY(26px);animation:rise 1s .35s forwards}
+  .lead{
+    margin-top:34px;font-size:18px;color:var(--ink-soft);max-width:30em;font-weight:300;
+    opacity:0;transform:translateY(18px);animation:rise 1s .5s forwards;
+  }
+  .hero-cta{
+    margin-top:46px;display:flex;gap:18px;flex-wrap:wrap;
+    opacity:0;transform:translateY(18px);animation:rise 1s .65s forwards;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:15px 34px;font-size:15px;letter-spacing:2px;
+    border:1.5px solid var(--ink);border-radius:2px;
+    transition:all .35s cubic-bezier(.2,.7,.3,1);
+  }
+  .btn.primary{background:var(--ink);color:var(--paper)}
+  .btn.primary:hover{background:var(--cinnabar);border-color:var(--cinnabar);transform:translateY(-3px);box-shadow:0 12px 30px rgba(168,51,42,.3)}
+  .btn.ghost:hover{background:var(--ink);color:var(--paper);transform:translateY(-3px)}
+
+  /* persona card on the right */
+  .persona{
+    position:relative;justify-self:center;
+    opacity:0;transform:translateY(24px) scale(.97);animation:rise 1.1s .55s forwards;
+  }
+  .persona-frame{
+    width:min(340px,72vw);aspect-ratio:3/4;border-radius:6px;
+    background:
+      linear-gradient(150deg, var(--paper-warm), #e3dccb);
+    border:1px solid var(--line);
+    position:relative;overflow:hidden;
+    box-shadow:0 30px 60px -20px rgba(26,26,26,.35);
+    display:grid;place-items:center;
+  }
+  .persona-frame::after{
+    content:"人设立绘 · OPC";position:absolute;bottom:18px;left:0;right:0;text-align:center;
+    font-size:12px;letter-spacing:4px;color:var(--ink-faint);
+  }
+  .persona-glyph{
+    font-size:120px;color:var(--cinnabar);opacity:.85;font-weight:300;
+    writing-mode:vertical-rl;line-height:1.1;
+  }
+  .persona-tag{
+    position:absolute;top:18px;left:18px;background:var(--cinnabar);color:var(--paper);
+    font-size:11px;letter-spacing:3px;padding:5px 12px;border-radius:2px;
+  }
+  .scroll-hint{
+    position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
+    font-size:11px;letter-spacing:4px;color:var(--ink-faint);
+    writing-mode:vertical-rl;display:flex;align-items:center;gap:10px;
+  }
+  .scroll-hint::after{content:"";width:1px;height:40px;background:linear-gradient(var(--ink-faint),transparent);animation:drip 1.8s infinite}
+
+  /* ---------- section frame ---------- */
+  section.block{padding:130px 0;position:relative}
+  .sec-head{margin-bottom:60px;display:flex;align-items:baseline;gap:26px;flex-wrap:wrap}
+  .sec-no{font-size:15px;letter-spacing:3px;color:var(--cinnabar);font-weight:600}
+  .sec-title{font-size:clamp(34px,5vw,56px);font-weight:700;letter-spacing:4px;line-height:1.1}
+  .sec-en{font-size:13px;letter-spacing:5px;color:var(--ink-faint);text-transform:uppercase;margin-left:auto}
+  .divider{height:1px;background:var(--line);margin:0 0 60px}
+
+  /* ---------- works ---------- */
+  .works-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:34px}
+  .work{
+    position:relative;border:1px solid var(--line);border-radius:5px;overflow:hidden;
+    background:rgba(255,255,255,.35);
+    transition:transform .45s cubic-bezier(.2,.7,.3,1),box-shadow .45s,border-color .45s;
+  }
+  .work:hover{transform:translateY(-8px);box-shadow:0 26px 50px -22px rgba(26,26,26,.4);border-color:transparent}
+  .work-cover{
+    aspect-ratio:16/10;display:grid;place-items:center;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#e7e0d0,#d9d0bd);
+  }
+  .work:nth-child(2) .work-cover{background:linear-gradient(135deg,#dfe4e2,#cdd6d2)}
+  .work:nth-child(3) .work-cover{background:linear-gradient(135deg,#e8ddd6,#dccabf)}
+  .work:nth-child(4) .work-cover{background:linear-gradient(135deg,#dcdce4,#c9cad6)}
+  .work-cover .big{font-size:64px;color:var(--ink);opacity:.16;font-weight:900;letter-spacing:6px}
+  .work-cover .ribbon{
+    position:absolute;top:16px;left:16px;font-size:11px;letter-spacing:3px;
+    background:rgba(26,26,26,.82);color:var(--paper);padding:5px 13px;border-radius:2px;
+  }
+  .work-body{padding:26px 28px 30px}
+  .work-body h3{font-size:23px;font-weight:600;letter-spacing:2px;margin-bottom:10px}
+  .work-body p{font-size:15px;color:var(--ink-faint);font-weight:300}
+  .work-meta{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  .chip{font-size:12px;letter-spacing:1px;color:var(--ink-soft);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+
+  /* ---------- about ---------- */
+  #about{background:linear-gradient(to bottom,transparent, rgba(236,230,216,.45), transparent)}
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+  .about-text p{font-size:17px;color:var(--ink-soft);margin-bottom:22px;font-weight:300}
+  .about-text .pull{font-size:25px;color:var(--ink);font-weight:500;line-height:1.6;letter-spacing:1px;border-left:3px solid var(--cinnabar);padding-left:22px;margin:30px 0}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .stat{background:var(--paper);padding:34px 28px;text-align:center}
+  .stat b{display:block;font-size:46px;font-weight:900;color:var(--cinnabar);letter-spacing:1px}
+  .stat span{font-size:14px;letter-spacing:2px;color:var(--ink-faint)}
+
+  /* ---------- services ---------- */
+  .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .svc{background:var(--paper);padding:44px 34px;transition:background .4s}
+  .svc:hover{background:rgba(255,255,255,.6)}
+  .svc .num{font-size:13px;letter-spacing:3px;color:var(--cinnabar);font-weight:600}
+  .svc h3{font-size:24px;font-weight:600;letter-spacing:2px;margin:16px 0 14px}
+  .svc p{font-size:15px;color:var(--ink-faint);font-weight:300}
+  .flow{margin-top:64px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;counter-reset:step}
+  .flow .step{flex:1;min-width:150px;text-align:center;position:relative}
+  .flow .step .dot{
+    width:54px;height:54px;border-radius:50%;border:1.5px solid var(--ink);
+    display:grid;place-items:center;margin:0 auto 16px;font-size:19px;font-weight:600;
+    background:var(--paper);position:relative;z-index:1;
+  }
+  .flow .step:not(:last-child)::after{
+    content:"";position:absolute;top:27px;left:60%;right:-40%;height:1px;
+    background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px);
+  }
+  .flow .step h4{font-size:17px;letter-spacing:2px;margin-bottom:6px}
+  .flow .step p{font-size:13px;color:var(--ink-faint)}
+
+  /* ---------- contact ---------- */
+  #contact{background:var(--ink);color:var(--paper);position:relative;overflow:hidden}
+  #contact::before{
+    content:"趣";position:absolute;right:-30px;bottom:-80px;font-size:380px;font-weight:900;
+    color:rgba(244,241,234,.04);line-height:1;pointer-events:none;
+  }
+  #contact .sec-title,#contact .sec-no{color:var(--paper)}
+  #contact .sec-no{color:var(--cinnabar-soft)}
+  #contact .divider{background:rgba(244,241,234,.15)}
+  .contact-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:60px;align-items:center}
+  .contact-lead{font-size:22px;font-weight:300;line-height:1.7;color:rgba(244,241,234,.85);max-width:24em}
+  .contact-list{display:flex;flex-direction:column;gap:4px}
+  .c-row{
+    display:flex;justify-content:space-between;align-items:center;gap:20px;
+    padding:22px 4px;border-bottom:1px solid rgba(244,241,234,.14);transition:padding .3s;
+  }
+  .c-row:hover{padding-left:14px}
+  .c-row .k{font-size:13px;letter-spacing:3px;color:var(--cinnabar-soft)}
+  .c-row .v{font-size:18px;letter-spacing:1px}
+  .contact-cta{margin-top:40px}
+  .contact-cta .btn.primary{background:var(--cinnabar);border-color:var(--cinnabar)}
+  .contact-cta .btn.primary:hover{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+
+  footer{padding:44px 0;text-align:center;background:var(--ink);color:rgba(244,241,234,.5);font-size:13px;letter-spacing:2px}
+  footer .seal-sm{display:inline-block;width:24px;height:24px;background:var(--cinnabar);color:var(--paper);border-radius:4px;line-height:24px;font-weight:700;margin-right:8px;vertical-align:middle}
+
+  /* reveal on scroll */
+  .reveal{opacity:0;transform:translateY(40px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  @keyframes rise{to{opacity:1;transform:none}}
+  @keyframes drip{0%{opacity:0;transform:scaleY(0);transform-origin:top}40%{opacity:1}100%{opacity:0;transform:scaleY(1);transform-origin:top}}
+
+  /* ---------- responsive ---------- */
+  @media(max-width:900px){
+    .hero .wrap{grid-template-columns:1fr;gap:50px}
+    .persona{order:-1}
+    .hero-vert{display:none}
+    .about-grid,.contact-grid{grid-template-columns:1fr;gap:40px}
+    .works-grid,.svc-grid{grid-template-columns:1fr}
+    .svc-grid{gap:1px}
+    nav.menu{
+      position:fixed;inset:0 0 0 auto;width:72%;max-width:320px;
+      background:var(--paper);flex-direction:column;justify-content:center;
+      padding:40px;gap:34px;transform:translateX(100%);transition:transform .4s ease;
+      box-shadow:-20px 0 60px rgba(0,0,0,.2);z-index:60;
+    }
+    nav.menu.open{transform:none}
+    nav.menu a{font-size:22px}
+    .menu-toggle{display:block;z-index:61}
+    .hero-ink{opacity:.4;width:90vw;right:-20%}
+  }
+  @media(max-width:560px){
+    .wrap{padding:0 22px}
+    .nav-inner{padding:18px 22px}
+    section.block{padding:90px 0}
+    .flow .step:not(:last-child)::after{display:none}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <div class="seal">拾趣</div>
+      <div class="brand-txt"><b>good fun</b><span>studio</span></div>
+    </a>
+    <nav class="menu" id="menu">
+      <a href="#works">项目展示</a>
+      <a href="#about">关于我们</a>
+      <a href="#services">服务合作</a>
+      <a href="#contact">联系方式</a>
+    </nav>
+    <button class="menu-toggle" id="toggle" aria-label="菜单">☰</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="hero-vert">写代码 · 亦写意 · 拾人间趣味</div>
+  <svg class="hero-ink" viewBox="0 0 600 600" aria-hidden="true">
+    <defs>
+      <radialGradient id="ig" cx="50%" cy="45%" r="60%">
+        <stop offset="0%" stop-color="#2a2a2a" stop-opacity=".14"/>
+        <stop offset="60%" stop-color="#2a2a2a" stop-opacity=".06"/>
+        <stop offset="100%" stop-color="#2a2a2a" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <path fill="url(#ig)" d="M300 70c70 30 60 110 110 150s120 40 110 130-110 80-140 150-90 40-150 10-150-40-160-130 60-120 90-190 70-150 140-120z"/>
+    <circle cx="430" cy="160" r="34" fill="#a8332a" opacity=".22"/>
+  </svg>
+  <div class="wrap">
+    <div class="hero-left">
+      <span class="eyebrow">GOODFUN STUDIO · 软件与创意</span>
+      <h1 class="title"><span class="l1">拾趣之间，</span><span class="l2">写代码亦写意。</span></h1>
+      <p class="lead">good fun 是一个以「OPC」为名的一人工作室。从产品构想到代码落地，承接网站、小程序、应用、自动化与各类软件相关业务——以匠人之心，待每一次合作。</p>
+      <div class="hero-cta">
+        <a class="btn primary" href="#works">看看作品 →</a>
+        <a class="btn ghost" href="#contact">商务洽谈</a>
+      </div>
+    </div>
+    <div class="persona">
+      <div class="persona-frame">
+        <span class="persona-tag">OPC · 主理人</span>
+        <span class="persona-glyph">拾趣</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">向下 SCROLL</div>
+</section>
+
+<!-- WORKS -->
+<section class="block" id="works">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">壹 / 01</span>
+      <h2 class="sec-title">项目展示</h2>
+      <span class="sec-en">Selected Works</span>
+    </div>
+    <div class="divider reveal"></div>
+    <div class="works-grid">
+      <article class="work reveal">
+        <div class="work-cover"><span class="ribbon">Web</span><span class="big">壹</span></div>
+        <div class="work-body">
+          <h3>品牌官网 · 案例</h3>
+          <p>为客户打造的响应式品牌主页，含内容管理与动效设计。</p>
+          <div class="work-meta"><span class="chip">网站建设</span><span class="chip">交互设计</span><span class="chip">SEO</span></div>
+        </div>
+      </article>
+      <article class="work reveal">
+        <div class="work-cover"><span class="ribbon">App</span><span class="big">贰</span></div>
+        <div class="work-body">
+          <h3>小程序 / 应用</h3>
+          <p>从需求梳理到上线交付的完整移动端解决方案。</p>
+          <div class="work-meta"><span class="chip">小程序</span><span class="chip">后端</span><span class="chip">上架</span></div>
+        </div>
+      </article>
+      <article class="work reveal">
+        <div class="work-cover"><span class="ribbon">AI</span><span class="big">叁</span></div>
+        <div class="work-body">
+          <h3>智能体 / 自动化</h3>
+          <p>结合 AI 能力的工作流自动化与智能助手定制开发。</p>
+          <div class="work-meta"><span class="chip">AI 集成</span><span class="chip">自动化</span><span class="chip">工具</span></div>
+        </div>
+      </article>
+      <article class="work reveal">
+        <div class="work-cover"><span class="ribbon">Tool</span><span class="big">肆</span></div>
+        <div class="work-body">
+          <h3>定制工具 / 脚本</h3>
+          <p>针对具体业务痛点的轻量工具与数据处理脚本。</p>
+          <div class="work-meta"><span class="chip">脚本</span><span class="chip">数据</span><span class="chip">效率</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="block" id="about">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">贰 / 02</span>
+      <h2 class="sec-title">关于我们</h2>
+      <span class="sec-en">About</span>
+    </div>
+    <div class="divider reveal"></div>
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p>good fun（拾趣）是一个独立软件工作室，由主理人「OPC」执掌。名字取自「good fun」的谐音，也意为在繁杂的代码与需求里，拾起那一点真正有趣的东西。</p>
+        <div class="pull">不做流水线的活儿，<br>只做能让人会心一笑的产品。</div>
+        <p>我们相信好的软件既要扎实可靠，也要有审美与温度。无论是网站、应用、小程序，还是 AI 与自动化，都欢迎前来咨询——从一个想法开始，一起把它做成型。</p>
+      </div>
+      <div class="stats reveal">
+        <div class="stat"><b>全栈</b><span>独立交付</span></div>
+        <div class="stat"><b>1v1</b><span>主理人对接</span></div>
+        <div class="stat"><b>∞</b><span>软件业务可咨询</span></div>
+        <div class="stat"><b>用心</b><span>每一个项目</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="block" id="services">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">叁 / 03</span>
+      <h2 class="sec-title">服务 · 合作</h2>
+      <span class="sec-en">Services</span>
+    </div>
+    <div class="divider reveal"></div>
+    <div class="svc-grid reveal">
+      <div class="svc">
+        <span class="num">SVC 01</span>
+        <h3>网站与前端</h3>
+        <p>品牌官网、落地页、后台系统、响应式页面与动效实现。</p>
+      </div>
+      <div class="svc">
+        <span class="num">SVC 02</span>
+        <h3>应用与小程序</h3>
+        <p>移动应用、微信/各平台小程序，含后端接口与部署上线。</p>
+      </div>
+      <div class="svc">
+        <span class="num">SVC 03</span>
+        <h3>AI 与自动化</h3>
+        <p>智能体、AI 接入、工作流自动化、数据处理与定制脚本。</p>
+      </div>
+    </div>
+
+    <div class="flow reveal">
+      <div class="step"><div class="dot">一</div><h4>沟通需求</h4><p>聊清想法与目标</p></div>
+      <div class="step"><div class="dot">二</div><h4>方案报价</h4><p>给出范围与排期</p></div>
+      <div class="step"><div class="dot">三</div><h4>设计开发</h4><p>分阶段推进交付</p></div>
+      <div class="step"><div class="dot">四</div><h4>上线维护</h4><p>验收交付与售后</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="block" id="contact">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-no">肆 / 04</span>
+      <h2 class="sec-title">联系方式</h2>
+      <span class="sec-en">Contact</span>
+    </div>
+    <div class="divider reveal"></div>
+    <div class="contact-grid">
+      <div class="reveal">
+        <p class="contact-lead">有想法、有项目，或只是想聊聊？欢迎随时联系。我们偏好先聊清楚再动手，让每一分预算都花在刀刃上。</p>
+        <div class="contact-cta">
+          <a class="btn primary" href="mailto:hello@goodfun.studio">发起商务洽谈 →</a>
+        </div>
+      </div>
+      <div class="contact-list reveal">
+        <a class="c-row" href="mailto:hello@goodfun.studio"><span class="k">EMAIL</span><span class="v">hello@goodfun.studio</span></a>
+        <div class="c-row"><span class="k">WECHAT</span><span class="v">goodfun_studio</span></div>
+        <div class="c-row"><span class="k">微博 / 小红书</span><span class="v">@goodfun拾趣</span></div>
+        <a class="c-row" href="https://github.com/Goodfun-Studio"><span class="k">GITHUB</span><span class="v">Goodfun-Studio</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="seal-sm">趣</span> good fun studio · 拾趣工作室 © 2026 · 写代码亦写意
+</footer>
+
+<script>
+  // mobile menu
+  const toggle=document.getElementById('toggle'),menu=document.getElementById('menu');
+  toggle.addEventListener('click',()=>menu.classList.toggle('open'));
+  menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>menu.classList.remove('open')));
+
+  // scroll reveal
+  const io=new IntersectionObserver((es)=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+  },{threshold:.14});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(i%4*60)+'ms';io.observe(el);});
+
+  // nav shrink
+  const nav=document.querySelector('.nav');
+  addEventListener('scroll',()=>{nav.style.boxShadow=scrollY>20?'0 1px 0 rgba(26,26,26,.08)':'none';});
+</script>
+</body>
+</html>
