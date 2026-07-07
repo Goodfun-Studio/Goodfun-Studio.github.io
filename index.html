@@ -198,9 +198,10 @@
     aspect-ratio:16/10;display:grid;place-items:center;position:relative;overflow:hidden;
     background:linear-gradient(135deg,#e7e0d0,#d9d0bd);
   }
-  .work:nth-child(2) .work-cover{background:linear-gradient(135deg,#dfe4e2,#cdd6d2)}
   .work:nth-child(3) .work-cover{background:linear-gradient(135deg,#e8ddd6,#dccabf)}
   .work:nth-child(4) .work-cover{background:linear-gradient(135deg,#dcdce4,#c9cad6)}
+  .work-cover img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;transition:transform .5s cubic-bezier(.2,.7,.3,1)}
+  .work:hover .work-cover img{transform:scale(1.04)}
   .work-cover .big{font-size:64px;color:var(--ink);opacity:.16;font-weight:900;letter-spacing:6px}
   .work-cover .ribbon{
     position:absolute;top:16px;left:16px;font-size:11px;letter-spacing:3px;
@@ -412,7 +413,7 @@
     <div class="divider reveal"></div>
     <div class="works-grid">
       <article class="work reveal">
-        <div class="work-cover"><span class="ribbon">Web</span><span class="big">壹</span></div>
+        <div class="work-cover"><img src="works/supremicro.jpg" alt="至成微科技官网截图" loading="lazy"><span class="ribbon">Web</span></div>
         <div class="work-body">
           <h3><a href="https://supremicro.com/" target="_blank" rel="noopener">至成微科技 · 企业官网</a></h3>
           <p>芯片与无线互联技术公司官网，产品线、应用场景与投资机构展示，独立完成设计与上线交付。</p>
@@ -420,7 +421,7 @@
         </div>
       </article>
       <article class="work reveal">
-        <div class="work-cover"><span class="ribbon">Shop</span><span class="big">贰</span></div>
+        <div class="work-cover"><img src="works/tccfcct.jpg" alt="TCCFCCT SAFETY 独立站截图" loading="lazy"><span class="ribbon">Shop</span></div>
         <div class="work-body">
           <h3><a href="https://tccfcct.com/" target="_blank" rel="noopener">TCCFCCT SAFETY · Shopify 独立站</a></h3>
           <p>高可视性安全服饰跨境电商独立站，基于 Shopify 搭建产品体系与促销、订阅流程，独立完成开发与上线。</p>
