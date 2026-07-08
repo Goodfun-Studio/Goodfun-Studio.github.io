@@ -94,7 +94,7 @@
   <h2><span class="no">04</span>两个形态、一层同步，分别解决什么</h2>
   <p>回头看整体架构，四层各自的职责很清楚：</p>
   <ul>
-    <li><strong>国内小程序</strong> —— 日常记账入口，即用即走</li>
+    <li><strong>微信小程序</strong> —— 日常记账入口，即用即走</li>
     <li><strong>数据同步（HMAC 鉴权）</strong> —— 把云端数据安全地镜像一份到独立的托管服务，供 AI 侧使用</li>
     <li><strong>Postgres 副本 + 远程 MCP</strong> —— 面向 AI Agent 的只读分析层</li>
     <li><strong>本地开源桌面版</strong> —— 完全独立的离线路径，不经过前三层</li>
