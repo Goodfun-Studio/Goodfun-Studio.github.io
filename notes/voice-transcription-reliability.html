@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一段录音从生成到转写完成,中间要过几道保险 · good fun 谷放</title>
+<meta name="description" content="语音转写任务的可靠性设计拆解:异步提交与回调、同步快速通道与自动降级、分级重试与回调补偿、主动轮询兜底,以及 macOS 客户端录音中途遇到设备切换时如何不中断录制。">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;--ink-soft:#3a3733;--ink-faint:#6b6660;
+    --paper:#f4f1ea;--paper-warm:#ece6d8;
+    --cinnabar:#a8332a;--cinnabar-soft:#c25a4a;
+    --line:rgba(26,26,26,.12);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+    --w:820px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--serif);color:var(--ink);background:var(--paper);line-height:1.9;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 28px}
+  header.nav{padding:28px 0;border-bottom:1px solid var(--line)}
+  .back{font-size:14px;letter-spacing:1px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:8px;transition:color .3s}
+  .back:hover{color:var(--cinnabar)}
+  article{padding:60px 0 100px}
+  .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
+  .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
+  h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
+  h2 .no{color:var(--cinnabar);margin-right:10px;font-size:15px}
+  p{font-size:16.5px;color:var(--ink-soft);font-weight:300;margin-bottom:18px}
+  strong{font-weight:600;color:var(--ink)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--paper-warm);padding:2px 7px;border-radius:4px;font-size:14.5px}
+  ul{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
+  li{margin-bottom:8px}
+  .callout{border-left:3px solid var(--cinnabar);padding:18px 24px;margin:30px 0;background:rgba(255,255,255,.4);font-size:15.5px;color:var(--ink-soft)}
+  .diagram{border:1px solid var(--line);border-radius:6px;padding:30px 26px;margin:30px 0;background:rgba(255,255,255,.35)}
+  .flow-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;letter-spacing:.5px}
+  .flow-box{border:1.5px solid var(--ink);border-radius:4px;padding:12px 16px;background:var(--paper);text-align:center;flex:1;min-width:120px}
+  .flow-arrow{color:var(--cinnabar-soft);font-size:18px}
+  .cta{margin-top:70px;padding:34px 30px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.4);text-align:center}
+  .cta p{margin-bottom:16px}
+  .btn{display:inline-flex;padding:13px 30px;font-size:15px;letter-spacing:2px;border:1.5px solid var(--ink);border-radius:2px;background:var(--ink);color:var(--paper);transition:all .3s}
+  .btn:hover{background:var(--cinnabar);border-color:var(--cinnabar)}
+  footer{text-align:center;padding:40px 0;font-size:13px;color:var(--ink-faint);border-top:1px solid var(--line)}
+  @media(max-width:560px){.flow-row{flex-direction:column}.flow-arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="back" href="../index.html#notes">← 回到 good fun 谷放</a></div></header>
+<article class="wrap">
+  <span class="tag">系统设计</span>
+  <h1>一段录音从生成到转写完成,中间要过几道保险</h1>
+  <p class="meta">技术笔记 · good fun 谷放</p>
+
+  <p>这是给一家创业公司做场外技术顾问期间参与的一个项目——一个录音、转写、AI 摘要一体的应用。我主导其中两个子系统:录音接收落库与转写服务对接(重点是稳定性保障),以及一个 macOS 原生录音客户端。这篇不讲产品,只讲这两块里踩过的可靠性设计:转写服务这种外部依赖,单次调用大概率会在某个环节抖一下,怎么设计才能让最终结果依然稳。</p>
+
+  <h2><span class="no">01</span>转写请求为什么要过一层任务队列,而不是直接调用等结果</h2>
+  <p>转写通常要几十秒到几分钟才能出结果,如果收到录音就同步调用转写服务、原地等返回,整条请求链路就被这一次外部调用的耗时和成功率绑死了——转写服务一抖动,拖累的是整个业务流程。所以录音一落库,先生成一条状态为"待处理"的转写任务记录,提交转写请求之后立刻返回,不阻塞。</p>
+  <p>后续靠一个状态机串起来:待处理 → 处理中 → 完成/失败。提交任务后,通过一个工作流引擎等待"转写完成"的回调信号,同时给这次等待加了超时保护——避免转写服务那边没了动静,这个任务就无限期悬在"处理中"。</p>
+
+  <h2><span class="no">02</span>同步优先,异步兜底:给部分场景开一条快速通道</h2>
+  <p>并不是所有场景都适合"提交后干等回调"。对于特定来源(比如桌面客户端产生的音频)、时长在阈值内的录音,走一条"同步优先"通道:直接同步调用、尽快拿到结果,用户体验更好,不用干等回调信号。</p>
+  <p>但这条快速通道一旦失败,不是直接把任务标记失败,而是自动降级回退到"异步提交 + 等回调"的常规路径,保持任务状态继续往前走。两条路径并发存在时,状态更新做了幂等保护——先把任务状态置为"处理中"再持久化,避免快速通道和常规路径互相抢着改状态,把彼此的进度覆盖掉。</p>
+
+  <h2><span class="no">03</span>转写没有一次成功:分级重试 + 回调补偿 + 主动轮询兜底</h2>
+  <p>转写服务作为外部依赖,失败是常态而不是意外,所以这层设计了几道递进的保险:</p>
+  <ul>
+    <li><strong>请求级重试</strong> —— 单次调用失败,先在本地按退避策略重试几次,吸收掉网络抖动这类瞬时问题</li>
+    <li><strong>任务级重试</strong> —— 如果转写服务明确返回"可重试"类错误码,不在当场死等重试,而是把任务重新放回"待处理"队列,交给下一轮定时任务处理,最多重试若干次;超过上限才判定为最终失败,避免同一个任务在同一时间被反复打</li>
+    <li><strong>回调补偿</strong> —— 所有回调的原始数据先落库,业务处理失败会记下失败状态;有个补偿任务定期重放这些"收到了但没处理成功"的回调,防止一次下游临时故障导致转写结果永久丢失</li>
+    <li><strong>主动轮询兜底</strong> —— 除了被动等回调,还有个定时任务会主动去查"应该完成但没收到回调"的任务的最新状态,双保险防止回调本身在传输中丢失导致任务卡死</li>
+    <li><strong>限流保护</strong> —— 所有请求过一层令牌桶限速,避免自己把下游转写服务的接口打爆,反而制造更多失败</li>
+  </ul>
+  <div class="callout">这几层保险背后是同一个前提:不能假设"这次调用会成功"。转写服务是别人的系统,单次请求随时可能超时、返回错误码、或者回调根本没送到。设计的目标不是消灭失败,而是让每一种失败都有对应的兜底路径接住它。</div>
+
+  <h2><span class="no">04</span>macOS 客户端:录音中途换设备,不该打断录音</h2>
+  <p>客户端做的是混合录音——同时采集系统音频和麦克风输入,合并成一路录音。这里用的是 macOS 的系统音频 Tap 技术抓系统输出。问题是:用户很可能在录音过程中拔耳机、断开蓝牙耳机、或者切换默认输出/输入设备,这时候操作系统的默认音频设备变了,原来搭好的采集通路会失效。</p>
+  <p>处理方式是监听设备变化事件,一旦触发:先停掉旧的采集通路,短暂等待设备状态稳定,再重新建立一条新的采集通路接到新的默认设备上——整个过程录音不中断,只是中间有一个极短的重建窗口。</p>
+  <p>录音停止时还做了一次文件完整性校验:不是简单检查文件是否存在,而是实际读取音频时长,时长有效才判定为录制成功;时长读取失败还有一层兜底——用录制过程中累计写入的帧数倒算时长。避免"文件生成了但其实是空录音"这种情况被误判成功。</p>
+
+  <h2><span class="no">05</span>这套设计到底在解决什么问题</h2>
+  <p>转写服务是外部依赖,不可能保证每次调用都成功;网络和系统事件(设备切换)也不可能保证不出现。这套"异步为主 + 同步兜底 + 分级重试 + 回调补偿 + 主动轮询"的组合,本质上不是在优化"正常路径"的速度,而是在给"不正常路径"挨个准备接盘的人——让最终结果的可靠性,不依赖某一次外部调用刚好没出问题。</p>
+
+  <div class="cta">
+    <p>如果你也在做涉及外部服务依赖、需要稳定性保障设计的系统,或者原生客户端的音频/设备处理,可以聊聊。</p>
+    <a class="btn" href="../index.html#contact">聊聊你的想法 →</a>
+  </div>
+</article>
+<footer>good fun studio · 谷放工作室 © 2026</footer>
+</body>
+</html>
