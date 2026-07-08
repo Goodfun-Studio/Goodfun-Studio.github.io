@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一个记账小程序，为什么要做出云端 + 本地两条腿 · good fun 谷放</title>
+<meta name="description" content="投资记账工具的架构设计拆解：云端小程序与开源本地桌面版的取舍、跨境数据同步的鉴权与幂等设计、MCP 只读分析接口怎么做。">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;--ink-soft:#3a3733;--ink-faint:#6b6660;
+    --paper:#f4f1ea;--paper-warm:#ece6d8;
+    --cinnabar:#a8332a;--cinnabar-soft:#c25a4a;
+    --line:rgba(26,26,26,.12);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+    --w:820px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--serif);color:var(--ink);background:var(--paper);line-height:1.9;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 28px}
+  header.nav{padding:28px 0;border-bottom:1px solid var(--line)}
+  .back{font-size:14px;letter-spacing:1px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:8px;transition:color .3s}
+  .back:hover{color:var(--cinnabar)}
+  article{padding:60px 0 100px}
+  .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
+  .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
+  h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
+  h2 .no{color:var(--cinnabar);margin-right:10px;font-size:15px}
+  p{font-size:16.5px;color:var(--ink-soft);font-weight:300;margin-bottom:18px}
+  strong{font-weight:600;color:var(--ink)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--paper-warm);padding:2px 7px;border-radius:4px;font-size:14.5px}
+  ul{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
+  li{margin-bottom:8px}
+  .callout{border-left:3px solid var(--cinnabar);padding:18px 24px;margin:30px 0;background:rgba(255,255,255,.4);font-size:15.5px;color:var(--ink-soft)}
+  .diagram{border:1px solid var(--line);border-radius:6px;padding:30px 26px;margin:30px 0;background:rgba(255,255,255,.35)}
+  .flow-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;letter-spacing:.5px}
+  .flow-box{border:1.5px solid var(--ink);border-radius:4px;padding:12px 16px;background:var(--paper);text-align:center;flex:1;min-width:120px}
+  .flow-arrow{color:var(--cinnabar-soft);font-size:18px}
+  .cta{margin-top:70px;padding:34px 30px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.4);text-align:center}
+  .cta p{margin-bottom:16px}
+  .btn{display:inline-flex;padding:13px 30px;font-size:15px;letter-spacing:2px;border:1.5px solid var(--ink);border-radius:2px;background:var(--ink);color:var(--paper);transition:all .3s}
+  .btn:hover{background:var(--cinnabar);border-color:var(--cinnabar)}
+  footer{text-align:center;padding:40px 0;font-size:13px;color:var(--ink-faint);border-top:1px solid var(--line)}
+  @media(max-width:560px){.flow-row{flex-direction:column}.flow-arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="back" href="../index.html#notes">← 回到 good fun 谷放</a></div></header>
+<article class="wrap">
+  <span class="tag">产品设计</span>
+  <h1>一个记账小程序，为什么要做出云端 + 本地两条腿</h1>
+  <p class="meta">技术笔记 · good fun 谷放</p>
+
+  <p>「记账tracker」是一个投资持仓记账与复盘工具，支持 A股/港股/美股等多市场记账，从买入、减仓到平仓统计胜率、最大盈亏、平均持有天数。做到后期，一个问题冒出来：同一套记账逻辑，要不要只做一个云端小程序就完事？最后的答案是"不够"——于是做成了云端小程序 + 开源本地桌面版两个形态，外加一层跨境数据同步和一个 MCP 只读分析接口。这篇记录这几个设计决策背后的取舍。</p>
+
+  <h2><span class="no">01</span>为什么云端小程序不是唯一形态</h2>
+  <p>持仓记账这类数据，天然比"待办清单"敏感得多——它间接暴露一个人的资产规模和交易行为。云端小程序（微信云开发 + 云函数 + MongoDB）解决的是"多端同步、随时随地记"的需求，但一定会有一部分用户，宁可牺牲多端同步，也要"数据不上云"。这两种需求没有对错，只是取向不同，硬凑成一个产品体验只会两头都不讨好。</p>
+  <p>所以决定拆成两个独立形态：</p>
+  <ul>
+    <li><strong>云端小程序</strong> —— 微信生态内即用即走，数据存在云端，换手机不丢数据</li>
+    <li><strong>本地桌面版</strong> —— Tauri 2.2 + Next.js 15 + Rust 构建，数据存在本地 SQLite，完全离线，开源 MIT 协议</li>
+  </ul>
+  <p>两者记账模型是一致的，但桌面版不依赖任何云端账号体系，装完就能用，卸载就是彻底清除，这条隐私主张对部分用户是刚需。</p>
+
+  <h2><span class="no">02</span>云端版不甘心只做"记账本"：接一层跨境数据同步</h2>
+  <p>云端小程序跑在微信云开发（国内 CloudBase）环境里，但后续想做的 AI 辅助分析，需要接远程 MCP，服务对象是 Claude Desktop 这类跑在海外网络环境的 AI Agent。国内云函数直接暴露给海外 Agent 连接，稳定性和合规性都不理想，于是加了一层同步：</p>
+  <div class="diagram">
+    <div class="flow-row">
+      <div class="flow-box">小程序云端记账</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">同步事件推送</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">海外 Ingest API</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Postgres 海外副本</div>
+    </div>
+  </div>
+  <p>每次持仓变动（买入/减仓/平仓）都会生成一条同步事件，推给海外的 Ingest 服务落库。这一层设计上有两个必须解决的问题：</p>
+  <ul>
+    <li><strong>身份鉴权</strong> —— 用 HMAC-SHA256 对请求签名，海外服务验证签名合法性才接受写入，避免接口被伪造请求打穿</li>
+    <li><strong>幂等与乱序</strong> —— 每条事件带唯一 <code>event_id</code>，重复推送直接去重；同时用业务时间字段（数据在源端的更新时间）而不是网络到达时间做比较，避免网络抖动导致的乱序请求覆盖新数据</li>
+  </ul>
+  <div class="callout">这类跨境同步最容易踩的坑不是"连不上"，而是"连上了但数据乱了"——网络重试导致同一条事件到两次，或者两条事件因为网络延迟颠倒了到达顺序。幂等和乱序保护不是可选项，是这层设计的地基。</div>
+
+  <h2><span class="no">03</span>MCP 只读分析：让 AI Agent 看得到数据，动不了数据</h2>
+  <p>海外 Postgres 副本落地之后，上面架了一个远程 MCP Server，对外提供统计类的只读接口——持仓概览、盈亏统计、已平仓交易分析这些。用户可以拿到自己的 API Key，在 Claude Desktop 这类支持 MCP 的客户端里连上，直接用自然语言问"我这个月哪几笔亏得最多""胜率趋势怎么样"，不需要自己写 SQL 或者切回小程序里翻数据。</p>
+  <p>这一层的关键设计原则是<strong>只读</strong>：MCP 接口不提供任何写入或修改操作，AI Agent 能看到统计结果，但没有能力反向修改持仓记录。分析和记账两件事，权限上必须分开，这也是为什么"分析"要单独接一层 MCP，而不是让小程序云函数直接兼职做这件事——一旦分析接口和记账接口共用一套权限，出问题时排查和收权限都会麻烦得多。</p>
+
+  <h2><span class="no">04</span>两个形态、一层同步，分别解决什么</h2>
+  <p>回头看整体架构，四层各自的职责很清楚：</p>
+  <ul>
+    <li><strong>国内小程序</strong> —— 日常记账入口，即用即走</li>
+    <li><strong>跨境同步（HMAC 鉴权）</strong> —— 把云端数据安全地镜像到海外，供 AI 侧使用</li>
+    <li><strong>海外 Postgres 副本 + 远程 MCP</strong> —— 面向 AI Agent 的只读分析层</li>
+    <li><strong>本地开源桌面版</strong> —— 完全独立的离线路径，不经过前三层</li>
+  </ul>
+  <p>这套架构没有哪一层是"顺手加的"，每一层都是为了回应一个具体的用户诉求：多端同步、AI 辅助复盘、数据隐私。做个人项目最容易犯的错是"技术上能做就都做上"，但这里每加一层复杂度之前，都先问了一句：这一层解决的是谁的问题——答案模糊的部分，就先不做。</p>
+
+  <div class="cta">
+    <p>如果你也在做类似的多端同步、跨境数据架构，或者想接 MCP 给自己的产品加 AI 分析能力，可以聊聊。</p>
+    <a class="btn" href="../index.html#contact">聊聊你的想法 →</a>
+  </div>
+</article>
+<footer>good fun studio · 谷放工作室 © 2026</footer>
+</body>
+</html>
