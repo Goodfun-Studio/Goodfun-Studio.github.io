@@ -85,6 +85,19 @@
   <h2><span class="no">02 ·</span> 系统音频 Tap 不是接上就完事:自愈监控 + 自动重定向</h2>
   <p>Process Tap 创建时需要指定"目标进程"——即从哪个正在播放声音的应用抓音频。这里有一个前提假设很容易出错:认为"录音开始时选对了目标进程,之后就没事了"。实际上,录音过程中用户完全可以切到其他窗口去做别的事,会议软件本身也可能因为焦点切走而改变音频输出行为——这两件事叠在一起,会让 Tap 正在抓的数据流悄悄断掉,变成全程静音或长期低能量。程序本身察觉不到,录音状态还显示"进行中",等到转写结果回来是空的才发现漏录了。</p>
   <p>这里没有假设"Tap 一旦建立就会一直稳定工作",而是加了一层轻量级自愈监控:每秒检查一次累计帧数和平均能量,连续 5 秒没有新数据、或者连续 10 秒能量低于阈值(且此前从未检测到有效能量),就判定为"目标可能已经失效",自动触发一次重定向——停掉当前 Tap,重新扫描一遍正在输出音频的进程列表,重建一条新的采集管线。重定向最多尝试 3 次,避免在极端情况下陷入无限重建的死循环。</p>
+  <div class="diagram">
+    <p style="font-size:13px;color:var(--ink-faint);letter-spacing:1px;margin-bottom:16px">自愈监控:检测失效 → 自动重定向,最多循环 3 次</p>
+    <div class="flow-row">
+      <div class="flow-box">Tap 持续采集</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">自愈监控<br>每秒查帧数 / 能量</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">判定失效<br>连续5秒无数据 或<br>连续10秒低能量</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">停止旧Tap →<br>重新扫描进程 →<br>重建采集管线</div>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink-faint);margin:14px 0 0;text-align:center">重建后回到"Tap 持续采集"重新监控,最多尝试 3 次,避免无限重建</p>
+  </div>
   <div class="callout">这层自愈监控解决的是"采集目标本身失效"这种更隐蔽的问题——不是设备被拔掉那种明显信号,而是数据流悄悄断掉、程序自己都不容易第一时间发现。</div>
 
   <h2><span class="no">03 ·</span> 用户中途换设备:停旧、等、建新,录音不中断</h2>
