@@ -63,6 +63,24 @@
   <h2><span class="no">01 ·</span> 先搞清楚在录什么:系统音频 + 麦克风,两条独立的采集通路</h2>
   <p>客户端做的是混合录音——把系统音频(比如对方在视频会议里说的话)和麦克风输入(自己说的话)合并成一路录音文件。这两路音频的采集方式必须是独立采集,这是 macOS 平台本身决定的,不是设计上的选择:系统音频靠 macOS 的 Process Tap 技术(<code>AudioHardwareCreateProcessTap</code>)从正在输出音频的进程里抓取 PCM 数据,麦克风则通过 <code>AVCaptureSession</code> 独立采集,两者走的是完全不同的系统 API,没有办法合并成一条采集管线。</p>
   <p>真正需要做决定的地方是采集之后怎么合成:两条通路分别做重采样、下混到单声道,再各自过一层"声像"节点(系统音频在左声道,麦克风在右声道)汇入同一个混音器,最终混出立体声写入 M4A 文件。选择让两路音频保持声道分离而不是直接叠加平均,是为了后续转写时能大致分辨"这段是对方说的还是自己说的"。</p>
+  <div class="diagram">
+    <p style="font-size:13px;color:var(--ink-faint);letter-spacing:1px;margin-bottom:16px">两条独立通路,各占一个声道,汇入同一个文件</p>
+    <div class="flow-row">
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:160px">
+        <div class="flow-box">系统音频<br>Process Tap</div>
+        <div class="flow-box">麦克风<br>AVCaptureSession</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:120px">
+        <div class="flow-box">声像:左声道</div>
+        <div class="flow-box">声像:右声道</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">混音器</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">M4A<br>立体声文件</div>
+    </div>
+  </div>
 
   <h2><span class="no">02 ·</span> 系统音频 Tap 不是接上就完事:自愈监控 + 自动重定向</h2>
   <p>Process Tap 创建时需要指定"目标进程"——即从哪个正在播放声音的应用抓音频。这里有一个前提假设很容易出错:认为"录音开始时选对了目标进程,之后就没事了"。实际上,录音过程中用户完全可以切到其他窗口去做别的事,会议软件本身也可能因为焦点切走而改变音频输出行为——这两件事叠在一起,会让 Tap 正在抓的数据流悄悄断掉,变成全程静音或长期低能量。程序本身察觉不到,录音状态还显示"进行中",等到转写结果回来是空的才发现漏录了。</p>
