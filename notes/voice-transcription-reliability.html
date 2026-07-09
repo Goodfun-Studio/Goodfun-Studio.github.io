@@ -63,6 +63,7 @@
   <h2><span class="no">01 ·</span> 转写请求为什么要过一层任务队列,而不是直接调用等结果</h2>
   <p>最初的需求其实是一条三段式流程:先从对接的通话平台系统那边接收录音文件、落到自己的存储里,再把录音转成文字,最后把"转写完成"这件事通知给对应的用户。三段各自异步、各自可能变慢或失败——如果把它们串成一条同步调用链,收到文件就原地转写、转写完就原地通知,任何一段卡住,都会把前面已经做完的事情一起拖住。</p>
   <div class="diagram">
+    <p style="font-size:13px;color:var(--ink-faint);letter-spacing:1px;margin-bottom:16px">最初设想:三段串行</p>
     <div class="flow-row">
       <div class="flow-box">通话平台系统<br>录音文件</div>
       <span class="flow-arrow">→</span>
@@ -71,6 +72,20 @@
       <div class="flow-box">转写任务队列<br>(异步)</div>
       <span class="flow-arrow">→</span>
       <div class="flow-box">转写完成 · 通知用户</div>
+    </div>
+  </div>
+  <p>但真正落地时,通知用户这一步被单独拎出来了:录音一到、落库完成,就立刻通知用户"收到了",不等转写结果——转写完全走自己的异步节奏,两件事之间不再有依赖关系。</p>
+  <div class="diagram">
+    <p style="font-size:13px;color:var(--ink-faint);letter-spacing:1px;margin-bottom:16px">实际做法:落库后分叉两条线</p>
+    <div class="flow-row">
+      <div class="flow-box">通话平台系统<br>录音文件</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">接收 · 落库</div>
+      <span class="flow-arrow">→</span>
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:160px">
+        <div class="flow-box">立即通知用户<br>"收到录音了"</div>
+        <div class="flow-box">异步进入转写任务队列</div>
+      </div>
     </div>
   </div>
   <p>转写这一段尤其如此:通常要几十秒到几分钟才能出结果,如果收到录音就同步调用转写服务、原地等返回,整条链路就被这一次外部调用的耗时和成功率绑死了——转写服务一抖动,拖累的是整个流程。所以录音一落库,先生成一条状态为"待处理"的转写任务记录,提交转写请求之后立刻返回,不阻塞,把"接收录音"和"转写完成"两个时间点彻底解耦。</p>
