@@ -122,10 +122,36 @@
   <h2><span class="no">04 ·</span> "看起来在录"不等于"真的在录":心跳检测 + 静音判断</h2>
   <p>这类问题最初是从结果上发现的:会议录音时间通常比较长,过程中难免要切换页面、切换应用,但录音本身应该完全不受影响。可实际上出现过这样的情况——录音开始一段时间是正常的,中间某个时刻悄悄断流,后面一大段全是空的,而且整个过程程序没有报错,录音状态也一直显示"进行中",往往要等转写结果出来一大段空白才会被发现。问题可能出在不同环节(比如第2节的 Tap 目标失效、系统音频权限被收回、麦克风被其他进程抢占),但表现出来都是同一种症状——所以需要一层不依赖具体原因判断、只看"数据到底还在不在流入"的兜底检测。</p>
   <p>所以两条路径各自维护一个"最近一次收到有效数据"的时间戳,每 5 秒检查一次心跳:系统音频超过一定时间没数据判定异常(允许的静默窗口更长,因为会议本身可能有大段静音),麦克风路径同理。除了事件驱动的监听,还加了一层不依赖任何通知机制的轮询兜底——定期主动查询当前默认输入/输出设备的标识,和录音开始时记录的初始设备标识做对比,防止设备变化通知本身因为系统原因没有触发。</p>
-  <p>系统音频这一侧还叠加了一个独立的静音检测器:持续监控系统音频的 RMS 能量,如果长时间(数量级为 10 分钟)保持静音,判定用户可能只是在录一段纯麦克风内容,自动收敛掉这条路径的资源占用。</p>
+  <div class="diagram">
+    <p style="font-size:13px;color:var(--ink-faint);letter-spacing:1px;margin-bottom:16px">两层兜底并行:心跳检测 + 轮询对比,双保险防漏检</p>
+    <div class="flow-row">
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:180px">
+        <div class="flow-box">心跳检测<br>每5秒查"最近有效数据"时间戳</div>
+        <div class="flow-box">轮询兜底<br>定期查当前默认设备标识,对比初始记录</div>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">判定数据流<br>是否仍在流入</div>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink-faint);margin:14px 0 0;text-align:center">系统音频侧另有独立静音检测:RMS能量持续静音约10分钟,判定用户仅录麦克风,自动收敛资源</p>
+  </div>
 
   <h2><span class="no">05 ·</span> 停止录音时,"文件存在"不代表"录成了"</h2>
   <p>录音结束的那一刻,还有最后一道校验:不是简单检查输出文件是否存在,而是实际用 AVAsset 读取一次音频时长——时长是个有效正数才判定为录制成功。如果时长读取本身失败(偶尔会因为文件刚写完、元数据还没落盘完整而读取失败),会有一层兜底:用录制过程中实际累计写入的帧数,按采样率倒算出一个估算时长,而不是直接把这次失败当成"录音失败"上报给用户。</p>
+  <div class="diagram">
+    <p style="font-size:13px;color:var(--ink-faint);letter-spacing:1px;margin-bottom:16px">停止录音:先校验时长,而不是只看文件是否存在</p>
+    <div class="flow-row">
+      <div class="flow-box">点击"停止"</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">AVAsset<br>回读实际音频时长</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">时长为有效正数?</div>
+      <span class="flow-arrow">→</span>
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:160px">
+        <div class="flow-box">是:判定录制成功</div>
+        <div class="flow-box">读取失败:按累计写入帧数<br>估算时长,不直接报失败</div>
+      </div>
+    </div>
+  </div>
   <p>这一步存在的理由很直接:文件被成功创建,不代表里面真的有声音数据。一次 Tap 目标选错、或者混音器管线中途卡死,都可能产出一个"看起来是正常大小的 M4A,但实际是静音"的文件——只有真正回读时长,才能把这类问题在用户点击"停止"的那一刻拦下来,而不是等转写结果空空如也时才发现。</p>
 
   <h2><span class="no">06 ·</span> 这套设计的代价,以及哪些问题它接不住</h2>
