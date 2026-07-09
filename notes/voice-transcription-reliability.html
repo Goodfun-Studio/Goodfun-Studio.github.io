@@ -27,6 +27,7 @@
   .back:hover{color:var(--cinnabar)}
   article{padding:60px 0 100px}
   .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  .series-tag{font-size:12px;letter-spacing:1.5px;color:var(--ink-faint);margin-left:10px}
   h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
   .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
   h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
@@ -52,11 +53,11 @@
 <body>
 <header class="nav"><div class="wrap"><a class="back" href="../index.html#notes">← 回到 good fun 谷放</a></div></header>
 <article class="wrap">
-  <span class="tag">系统设计</span>
+  <span class="tag">系统设计</span><span class="series-tag">系列 · 上篇</span>
   <h1>不假设一次调用会成功:一套录音转写系统的可靠性设计</h1>
   <p class="meta">技术笔记 · good fun 谷放出品 · 作者 Ivy</p>
 
-  <p>这是给一家创业公司做场外技术顾问期间参与的一个项目——一个录音、转写、AI 摘要一体的应用,公司信息不便透露,但项目本身的技术方案可以拆开讲。我主导其中两个子系统,这篇讲第一个:录音接收落库与转写服务对接。另一个子系统——macOS 原生录音客户端在录音中途怎么扛住设备切换——写在<a href="macos-recording-reliability.html">另一篇笔记</a>里。</p>
+  <p>这是给一家创业公司做场外技术顾问期间参与的一个项目——一个录音、转写、AI 摘要一体的应用,公司信息不便透露,但项目本身的技术方案可以拆开讲。我主导其中两个子系统,这篇讲第一个:录音接收落库与转写服务对接。</p>
   <p>这篇不讲产品,只讲一件事:转写服务是别人的系统,单次调用随时可能超时、报错、或者结果根本没送达。<strong>不能假设这次调用会成功,只能为每一种可能的失败,提前准备好接盘的路径。</strong>下面是这套设计具体长什么样。</p>
 
   <h2><span class="no">01 ·</span> 转写请求为什么要过一层任务队列,而不是直接调用等结果</h2>
@@ -82,6 +83,8 @@
   <p>这套组合不是没有代价的。多一条同步快速通道,就多一份幂等保护的复杂度要维护;多几层重试和轮询,系统里同时活跃的状态机分支就更多,排查一个任务"为什么卡在处理中"要多看几个地方。用复杂度换可靠性,是笔明确的交易,不是免费的午餐。</p>
   <p>它也不是万能的:如果转写服务本身长时间大范围不可用,再多重试和轮询也只是在延迟失败的发生,不能凭空制造出一个可用的转写结果——这套设计兜的是"偶发性、局部性"的失败,不是"下游整体宕机"这种系统性风险,后者需要更上层的降级预案(比如换一家转写服务、或者先把原始录音保留、事后补转写)。</p>
   <p>但对"外部依赖单次调用大概率会在某个环节抖一下"这个更常见的问题,让每一种失败——超时、错误码、回调丢失、进程重启——都有一条对应的路径接住它,结果就是:最终转写成功与否,不再取决于某一次外部调用刚好没出问题。</p>
+
+  <div class="callout">这是《录音、转写、可靠性》系列的上篇,讲的是转写服务这一侧。下篇讲的是它的上游——<a href="macos-recording-reliability.html">macOS 原生录音客户端如何在录音中途扛住设备切换与音频异常</a>,同一个项目的另一半技术方案。</div>
 
   <div class="cta">
     <p>如果你也在做涉及外部服务依赖、需要稳定性保障设计的系统,或者原生客户端的音频/设备处理,可以聊聊。</p>
