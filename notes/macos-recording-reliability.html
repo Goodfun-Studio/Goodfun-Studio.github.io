@@ -27,6 +27,7 @@
   .back:hover{color:var(--cinnabar)}
   article{padding:60px 0 100px}
   .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  .series-tag{font-size:12px;letter-spacing:1.5px;color:var(--ink-faint);margin-left:10px}
   h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
   .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
   h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
@@ -52,11 +53,11 @@
 <body>
 <header class="nav"><div class="wrap"><a class="back" href="../index.html#notes">← 回到 good fun 谷放</a></div></header>
 <article class="wrap">
-  <span class="tag">系统设计</span>
+  <span class="tag">系统设计</span><span class="series-tag">系列 · 下篇</span>
   <h1>录音这件小事,在 macOS 上有多难扛住</h1>
   <p class="meta">技术笔记 · good fun 谷放出品 · 作者 Ivy</p>
 
-  <p>这是给一家创业公司做场外技术顾问期间参与的一个项目——一个录音、转写、AI 摘要一体的应用,公司信息不便透露,但项目本身的技术方案可以拆开讲。我主导的另一部分是<a href="voice-transcription-reliability.html">转写服务的可靠性设计</a>,这篇讲的是它的上游:一个 macOS 原生录音客户端。</p>
+  <p>这是给一家创业公司做场外技术顾问期间参与的一个项目——一个录音、转写、AI 摘要一体的应用,公司信息不便透露,但项目本身的技术方案可以拆开讲。我主导其中两个子系统,这篇讲第二个:一个 macOS 原生录音客户端。</p>
   <p>服务端那一侧的前提是"转写调用随时可能失败,要为失败准备接盘路径"。客户端这一侧的前提类似,只是换了个对象:<strong>不能假设录音过程中设备环境不会变。</strong>用户会在录音进行到一半时拔耳机、断开蓝牙、插入新麦克风——这些都是真实会发生的中途事件,不是边界情况。</p>
 
   <h2><span class="no">01 ·</span> 先搞清楚在录什么:系统音频 + 麦克风,两条独立的采集通路</h2>
@@ -86,6 +87,8 @@
   <p>音频采集这一层的可靠性设计,复杂度主要花在"状态监控"上——自愈式重定向、心跳检测、设备轮询、静音检测,这几层监控本身需要持续消耗一点 CPU 和维护成本,排查一次"录音效果不对"的问题也要多看几层日志。这和转写服务那篇里的"用复杂度换可靠性"是同一笔交易。</p>
   <p>它接不住的是系统层面的硬限制:如果用户在录音过程中彻底关闭了系统音频录制权限,或者某个音频驱动本身崩溃到 CoreAudio 层面都拿不到设备列表,再怎么重定向和重建也无法凭空恢复采集能力——这类问题只能靠上层给用户明确的错误提示和权限引导,而不是指望客户端自己悄悄修复。</p>
   <p>但对"设备环境会在录音过程中变化"这个更常见的问题——拔耳机、切换默认设备、Tap 目标进程失效——让每一种变化都有对应的检测和重建路径接住它,结果就是:一次录音的完整性,不再取决于用户从头到尾都不动任何硬件。</p>
+
+  <div class="callout">这是《录音、转写、可靠性》系列的下篇,讲的是录音客户端这一侧。上篇讲的是它的下游——<a href="voice-transcription-reliability.html">转写服务的可靠性设计:异步任务队列、同步快速通道、分级重试与回调补偿</a>,同一个项目的另一半技术方案。</div>
 
   <div class="cta">
     <p>如果你也在做原生客户端的音频/设备处理,或者需要在不可控的外部环境里做可靠性设计,可以聊聊。</p>
