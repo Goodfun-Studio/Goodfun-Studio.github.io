@@ -563,8 +563,14 @@
       <article class="note">
         <span class="note-tag">系统设计</span>
         <h3><a href="notes/voice-transcription-reliability.html">不假设一次调用会成功:一套录音转写系统的可靠性设计</a></h3>
-        <p>转写任务的异步提交与回调、同步快速通道与自动降级、分级重试与回调补偿、主动轮询兜底,以及 macOS 客户端如何在录音中途扛住设备切换。</p>
+        <p>转写任务的异步提交与回调、同步快速通道与自动降级、分级重试与回调补偿、主动轮询兜底——为一个不可控的外部依赖设计接盘路径。</p>
         <a class="note-more" href="notes/voice-transcription-reliability.html">阅读全文 →</a>
+      </article>
+      <article class="note">
+        <span class="note-tag">系统设计</span>
+        <h3><a href="notes/macos-recording-reliability.html">录音这件小事,在 macOS 上有多难扛住</a></h3>
+        <p>系统音频 Tap 与麦克风双通路混音、设备切换中途的无损重建、自愈式监控与自动重定向、静音检测,以及为什么"文件生成了"不等于"录成了"。</p>
+        <a class="note-more" href="notes/macos-recording-reliability.html">阅读全文 →</a>
       </article>
     </div>
   </div>
