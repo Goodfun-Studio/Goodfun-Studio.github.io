@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>good fun · 谷放 | 编程开发 · 独立开发</title>
-<meta name="description" content="Goodfun Studio · 谷放工作室。独立开发者，专注编程开发，承接网站、应用、小程序、AI 与自动化。你的需求，我来交付。">
+<meta name="description" content="Goodfun Studio · 谷放工作室。负责人直接对接，承接网站、应用、小程序、AI 与自动化；源码、进度和关键文档持续可见，项目可交接。">
 <!-- favicon: 朱砂印章「谷放」，与左上角 logo 呼应 -->
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="favicon.svg">
 <!-- Open Graph / 社交分享卡片 -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="good fun · 谷放 | 编程开发 · 独立开发">
-<meta property="og:description" content="独立开发者，专注编程开发。你的需求，我来交付。一人公司，本人亲自对接。">
+<meta property="og:description" content="负责人直接交付，源码、进度和关键文档持续可见，项目始终可交接。">
 <meta property="og:image" content="https://goodfun-studio.github.io/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -19,7 +19,7 @@
 <meta property="og:site_name" content="good fun · 谷放">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="good fun · 谷放 | 编程开发 · 独立开发">
-<meta name="twitter:description" content="独立开发者，专注编程开发。你的需求，我来交付。一人公司，本人亲自对接。">
+<meta name="twitter:description" content="负责人直接交付，源码、进度和关键文档持续可见，项目始终可交接。">
 <meta name="twitter:image" content="https://goodfun-studio.github.io/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -126,9 +126,13 @@
     margin-top:34px;font-size:18px;color:var(--ink-soft);max-width:30em;font-weight:300;
     opacity:0;transform:translateY(18px);animation:rise 1s .5s forwards;
   }
+  .hero-proof{
+    margin-top:18px;font-size:14px;letter-spacing:2px;color:var(--cinnabar);font-weight:500;
+    opacity:0;transform:translateY(18px);animation:rise 1s .6s forwards;
+  }
   .hero-cta{
-    margin-top:46px;display:flex;gap:18px;flex-wrap:wrap;
-    opacity:0;transform:translateY(18px);animation:rise 1s .65s forwards;
+    margin-top:34px;display:flex;gap:18px;flex-wrap:wrap;
+    opacity:0;transform:translateY(18px);animation:rise 1s .72s forwards;
   }
   .btn{
     display:inline-flex;align-items:center;gap:10px;
@@ -177,6 +181,26 @@
     writing-mode:vertical-rl;display:flex;align-items:center;gap:10px;
   }
   .scroll-hint::after{content:"";width:1px;height:40px;background:linear-gradient(var(--ink-faint),transparent);animation:drip 1.8s infinite}
+
+  /* ---------- continuity promise ---------- */
+  .continuity{padding:0 0 110px;position:relative}
+  .continuity-panel{
+    border:1px solid var(--line);border-radius:5px;overflow:hidden;
+    background:rgba(255,255,255,.28);
+  }
+  .continuity-intro{
+    display:grid;grid-template-columns:.8fr 1.2fr;gap:56px;align-items:center;
+    padding:42px 46px;
+  }
+  .continuity-kicker{font-size:12px;letter-spacing:4px;color:var(--cinnabar);font-weight:600;margin-bottom:10px}
+  .continuity-title{font-size:clamp(28px,4vw,42px);font-weight:700;letter-spacing:3px;line-height:1.35}
+  .continuity-intro>p{font-size:17px;color:var(--ink-soft);font-weight:300}
+  .continuity-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+  .continuity-item{padding:30px 34px 34px;min-height:180px}
+  .continuity-item+.continuity-item{border-left:1px solid var(--line)}
+  .continuity-item .num{font-size:12px;letter-spacing:3px;color:var(--cinnabar);font-weight:600}
+  .continuity-item h3{font-size:21px;font-weight:600;letter-spacing:2px;margin:10px 0 8px}
+  .continuity-item p{font-size:14px;color:var(--ink-faint);font-weight:300}
 
   /* ---------- section frame ---------- */
   section.block{padding:130px 0;position:relative}
@@ -346,11 +370,17 @@
     nav.menu a{font-size:22px}
     .menu-toggle{display:block;z-index:61}
     .hero-ink{opacity:.4;width:90vw;right:-20%}
+    .continuity-intro{grid-template-columns:1fr;gap:18px;padding:36px 32px}
+    .continuity-grid{grid-template-columns:1fr}
+    .continuity-item{min-height:0}
+    .continuity-item+.continuity-item{border-left:0;border-top:1px solid var(--line)}
   }
   @media(max-width:560px){
     .wrap{padding:0 22px}
     .nav-inner{padding:18px 22px}
     section.block{padding:90px 0}
+    .continuity{padding-bottom:80px}
+    .continuity-intro,.continuity-item{padding-left:26px;padding-right:26px}
     .flow .step:not(:last-child)::after{display:none}
   }
   @media(prefers-reduced-motion:reduce){
@@ -398,6 +428,7 @@
       <span class="eyebrow">GOODFUN STUDIO · 软件与创意</span>
       <h1 class="title"><span class="l1">你的需求，</span><span class="l2">我来交付。</span></h1>
       <p class="lead">good fun（谷放）是一家 OPC（一人公司）——从产品构想到代码落地，由我一个人对接、设计、开发、交付。承接网站、小程序、应用、自动化与各类软件业务，以匠人之心，待每一次合作。</p>
+      <p class="hero-proof">负责人直接交付，项目过程始终可见、可交接。</p>
       <div class="hero-cta">
         <a class="btn primary" href="#works">看看作品 →</a>
         <a class="btn ghost" href="#contact">聊聊你的想法</a>
@@ -412,6 +443,38 @@
     </div>
   </div>
   <div class="scroll-hint">向下 SCROLL</div>
+</section>
+
+<!-- CONTINUITY -->
+<section class="continuity" aria-labelledby="continuity-title">
+  <div class="wrap">
+    <div class="continuity-panel reveal">
+      <div class="continuity-intro">
+        <div>
+          <p class="continuity-kicker">DELIVERY CONTINUITY</p>
+          <h2 class="continuity-title" id="continuity-title">项目始终在你手里</h2>
+        </div>
+        <p>你直接和负责人沟通，减少层层转述；同时，源码、账号、进度和关键文档持续向你开放。即使合作暂停，项目也能依据现有代码和资料由其他开发者继续接手。</p>
+      </div>
+      <div class="continuity-grid">
+        <article class="continuity-item">
+          <span class="num">01 / OWNERSHIP</span>
+          <h3>资产归你</h3>
+          <p>代码进入客户可访问的仓库，部署账号和关键资源由客户掌握。</p>
+        </article>
+        <article class="continuity-item">
+          <span class="num">02 / VISIBILITY</span>
+          <h3>过程可见</h3>
+          <p>按阶段同步可运行成果和当前进度，不到最后一天才交付。</p>
+        </article>
+        <article class="continuity-item">
+          <span class="num">03 / HANDOVER</span>
+          <h3>可以接手</h3>
+          <p>交付源码、部署说明和必要技术文档，避免项目变成只有原开发者懂的黑盒。</p>
+        </article>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- WORKS -->
