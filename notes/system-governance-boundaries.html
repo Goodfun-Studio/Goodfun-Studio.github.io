@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>已有业务系统越改越乱，技术上怎么重新建立治理边界 · good fun 谷放</title>
+<meta name="description" content="一篇关于已有业务系统治理的方法论笔记：如何区分功能问题与规则问题，把规则落到校验、状态、核验、通知、审计、上线验证与长期沉淀中。">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;--ink-soft:#3a3733;--ink-faint:#6b6660;
+    --paper:#f4f1ea;--paper-warm:#ece6d8;
+    --cinnabar:#a8332a;--cinnabar-soft:#c25a4a;
+    --line:rgba(26,26,26,.12);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+    --w:820px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--serif);color:var(--ink);background:var(--paper);line-height:1.9;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 28px}
+  header.nav{padding:28px 0;border-bottom:1px solid var(--line)}
+  .back{font-size:14px;letter-spacing:1px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:8px;transition:color .3s}
+  .back:hover{color:var(--cinnabar)}
+  article{padding:60px 0 100px}
+  .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
+  .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
+  h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
+  h2 .no{color:var(--cinnabar);margin-right:10px;font-size:15px}
+  p{font-size:16.5px;color:var(--ink-soft);font-weight:300;margin-bottom:18px}
+  strong{font-weight:600;color:var(--ink)}
+  ul{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
+  li{margin-bottom:8px}
+  .callout{border-left:3px solid var(--cinnabar);padding:18px 24px;margin:30px 0;background:rgba(255,255,255,.4);font-size:15.5px;color:var(--ink-soft)}
+  .diagram{border:1px solid var(--line);border-radius:6px;padding:30px 26px;margin:30px 0;background:rgba(255,255,255,.35)}
+  .flow-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;letter-spacing:.5px}
+  .flow-box{border:1.5px solid var(--ink);border-radius:4px;padding:12px 16px;background:var(--paper);text-align:center;flex:1;min-width:120px}
+  .flow-arrow{color:var(--cinnabar-soft);font-size:18px}
+  .cta{margin-top:70px;padding:34px 30px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.4);text-align:center}
+  .cta p{margin-bottom:16px}
+  .btn{display:inline-flex;padding:13px 30px;font-size:15px;letter-spacing:2px;border:1.5px solid var(--ink);border-radius:2px;background:var(--ink);color:var(--paper);transition:all .3s}
+  .btn:hover{background:var(--cinnabar);border-color:var(--cinnabar)}
+  footer{text-align:center;padding:40px 0;font-size:13px;color:var(--ink-faint);border-top:1px solid var(--line)}
+  @media(max-width:560px){.flow-row{flex-direction:column}.flow-arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="back" href="../index.html#notes">← 回到 good fun 谷放</a></div></header>
+<article class="wrap">
+  <span class="tag">系统治理</span>
+  <h1>已有业务系统越改越乱，技术上怎么重新建立治理边界</h1>
+  <p class="meta">技术笔记 · good fun 谷放</p>
+
+  <p>很多业务系统刚上线时并不复杂：几个表单、几条状态、几种操作角色，能跑起来就可以。真正的复杂度通常出现在长期迭代之后：规则被补丁式地加上去，例外情况靠人记，数据出现偏差时只能临时查，新的改动又继续叠在旧逻辑上。系统看起来还在运行，但每一次修改都变得更难预测。</p>
+  <p>这类问题不适合只用"再修一个功能"来处理。更有效的做法，是先把系统里的治理边界重新立起来：哪些规则必须由系统拦住，哪些状态必须可追踪，哪些数据必须能核验，哪些操作必须留下记录。边界清楚之后，后续迭代才不会越修越乱。</p>
+
+  <h2><span class="no">01</span>先区分：这是功能问题，还是规则问题</h2>
+  <p>功能问题通常很直观：按钮点不了、页面报错、数据没有保存。规则问题更隐蔽：某类数据本不该被录入，某个状态本不该被跳过，某个操作本该提醒相关人，但系统没有任何约束。这些问题短期看像"偶发错误"，长期看会变成运营成本。</p>
+  <p>排查已有系统时，我会先问几类问题：</p>
+  <ul>
+    <li>这条规则现在靠系统执行，还是靠人记住？</li>
+    <li>错误数据进入系统后，是在入口被拦住，还是等到后面才被发现？</li>
+    <li>状态变化有没有统一入口，还是散落在多个页面和脚本里？</li>
+    <li>发生异常时，有没有足够信息复原当时发生了什么？</li>
+  </ul>
+  <div class="callout">很多系统不是缺一个新功能，而是缺一条清楚的边界：什么可以发生，什么不该发生，发生之后谁能看见。</div>
+
+  <h2><span class="no">02</span>把规则落到可执行机制里</h2>
+  <p>规则如果只写在文档里，遇到赶时间、换人、临时处理，很容易失效。真正稳定的规则，应该尽量落到系统机制里。常见的落点包括：</p>
+  <ul>
+    <li><strong>入口校验</strong>：在数据进入系统前先检查格式、重复、必填项和前置条件。</li>
+    <li><strong>状态流转</strong>：明确每个状态能去哪里，哪些跳转需要额外条件，哪些操作必须被禁止。</li>
+    <li><strong>数据核验</strong>：对关键数据做定期或触发式检查，发现偏差时能定位来源。</li>
+    <li><strong>通知协同</strong>：重要状态变化不要只停留在数据库里，要让该知道的人及时知道。</li>
+    <li><strong>审计记录</strong>：关键操作要留下操作者、时间、前后变化和原因，方便复盘。</li>
+  </ul>
+  <p>这些机制不一定都要一次做完。更实际的顺序是先找最高风险的入口和状态，把会持续制造错误的数据挡住；再补核验、提醒和审计。这样每一轮改造都会降低后续排查成本。</p>
+
+  <h2><span class="no">03</span>上线前，补齐验证路径</h2>
+  <p>治理类改动的难点不只是"改对代码"，还在于确认它没有打断原有流程。已有系统里往往有历史数据、旧入口、批量脚本和人工流程，单测通过不代表真实环境安全。</p>
+  <p>上线前至少要把四件事想清楚：</p>
+  <ul>
+    <li><strong>灰度范围</strong>：先影响哪部分用户、哪类数据、哪几个入口。</li>
+    <li><strong>回滚方式</strong>：如果新规则误伤，能否快速关掉或回到旧逻辑。</li>
+    <li><strong>日志与排查点</strong>：出问题时能看到输入、判断结果和失败原因。</li>
+    <li><strong>数据对账</strong>：上线前后关键数据有没有变化，偏差是否能解释。</li>
+  </ul>
+  <div class="diagram">
+    <div class="flow-row">
+      <div class="flow-box">识别规则风险</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">落入系统约束</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">小范围验证</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">沉淀排查依据</div>
+    </div>
+  </div>
+  <p>验证路径的价值，是让改动从"我觉得没问题"变成"我知道它在哪些范围内没问题"。这个差别很重要，尤其是系统已经承载日常业务时。</p>
+
+  <h2><span class="no">04</span>上线后，把经验沉淀下来</h2>
+  <p>系统治理不是一次性清理。只要业务还在变化，规则就会继续变化。真正能降低长期成本的，是把这次排查和改造过程中学到的东西沉淀下来。</p>
+  <p>我通常会把沉淀拆成三类：</p>
+  <ul>
+    <li><strong>文档</strong>：关键规则、状态定义、异常处理方式，写给后续维护的人看。</li>
+    <li><strong>测试</strong>：把容易出错的边界条件变成自动化检查，避免下次改动重新踩坑。</li>
+    <li><strong>流程约束</strong>：哪些改动必须先确认数据影响，哪些上线必须带回滚和对账。</li>
+  </ul>
+  <p>这些沉淀看起来不像新功能，但它们决定了系统能不能持续迭代。一个系统从"能用"走向"可治理"，靠的不是一次大重构，而是一轮一轮把模糊规则变成清楚边界，把临时排查变成可复用的工程资产。</p>
+
+  <div class="cta">
+    <p>如果你的系统已经跑起来了，但规则越来越难说清、问题越来越难定位，可以先聊聊现有边界在哪里失效。</p>
+    <a class="btn" href="../index.html#contact">聊聊你的系统 →</a>
+  </div>
+</article>
+<footer>good fun studio · 谷放工作室 © 2026</footer>
+</body>
+</html>
