@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>让 Raft Agent 通过 Pi 使用本地大模型（Ollama）· good fun 谷放</title>
+<meta name="description" content="零 API 成本、数据不出内网——把 Raft Agent 的模型后端切到本机 Ollama 的完整流程，覆盖配置、超时坑、模型常驻与排查表，基于真实部署复盘整理。">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;--ink-soft:#3a3733;--ink-faint:#6b6660;
+    --paper:#f4f1ea;--paper-warm:#ece6d8;
+    --cinnabar:#a8332a;--cinnabar-soft:#c25a4a;
+    --line:rgba(26,26,26,.12);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --w:820px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--serif);color:var(--ink);background:var(--paper);line-height:1.9;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 28px}
+  header.nav{padding:28px 0;border-bottom:1px solid var(--line)}
+  .back{font-size:14px;letter-spacing:1px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:8px;transition:color .3s}
+  .back:hover{color:var(--cinnabar)}
+  article{padding:60px 0 100px}
+  .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  h1{font-size:clamp(28px,5vw,42px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
+  .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
+  h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
+  h2 .no{color:var(--cinnabar);margin-right:10px;font-size:15px}
+  p{font-size:16.5px;color:var(--ink-soft);font-weight:300;margin-bottom:18px}
+  strong{font-weight:600;color:var(--ink)}
+  code{font-family:var(--mono);background:var(--paper-warm);padding:2px 7px;border-radius:4px;font-size:14px}
+  ul{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
+  li{margin-bottom:8px}
+  pre{font-family:var(--mono);background:var(--paper-warm);border:1px solid var(--line);border-radius:6px;padding:22px 24px;margin:24px 0 28px;overflow-x:auto;font-size:13.5px;line-height:1.7;color:var(--ink)}
+  .callout{border-left:3px solid var(--cinnabar);padding:18px 24px;margin:30px 0;background:rgba(255,255,255,.4);font-size:15.5px;color:var(--ink-soft)}
+  .callout strong{color:var(--cinnabar)}
+  /* 排查表 */
+  .table-wrap{overflow-x:auto;margin:24px 0 32px}
+  table{width:100%;border-collapse:collapse;font-size:14.5px;color:var(--ink-soft);font-weight:300}
+  th{text-align:left;padding:10px 14px;border-bottom:2px solid var(--line);color:var(--ink);font-weight:600;font-size:13px;letter-spacing:.5px;white-space:nowrap}
+  td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .diagram{border:1px solid var(--line);border-radius:6px;padding:30px 26px;margin:30px 0;background:rgba(255,255,255,.35)}
+  .flow-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;letter-spacing:.5px}
+  .flow-box{border:1.5px solid var(--ink);border-radius:4px;padding:12px 16px;background:var(--paper);text-align:center;flex:1;min-width:120px}
+  .flow-arrow{color:var(--cinnabar-soft);font-size:18px}
+  .cta{margin-top:70px;padding:34px 30px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.4);text-align:center}
+  .cta p{margin-bottom:16px}
+  .btn{display:inline-flex;padding:13px 30px;font-size:15px;letter-spacing:2px;border:1.5px solid var(--ink);border-radius:2px;background:var(--ink);color:var(--paper);transition:all .3s}
+  .btn:hover{background:var(--cinnabar);border-color:var(--cinnabar)}
+  footer{text-align:center;padding:40px 0;font-size:13px;color:var(--ink-faint);border-top:1px solid var(--line)}
+  @media(max-width:560px){.flow-row{flex-direction:column}.flow-arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="back" href="../index.html#notes">← 回到 good fun 谷放</a></div></header>
+<article class="wrap">
+  <span class="tag">工程实践</span>
+  <h1>让 Raft Agent 通过 Pi 使用本地大模型（Ollama）</h1>
+  <p class="meta">技术笔记 · good fun 谷放</p>
+
+  <p>Raft 平台上的 AI agent 默认走云端模型 API。如果你自己运行 Ollama 提供本地大模型，可以让 agent 通过 <code>runtime = pi</code> 直接连上它——零 API 成本、低延迟、数据不出内网。</p>
+  <p>这篇基于真实的本地部署与局域网部署复盘整理，覆盖从配置到踩坑的完整流程。</p>
+
+  <h2><span class="no">01</span>它怎么工作</h2>
+  <p>先理解一件事：<code>runtime = pi</code> 并不会启动一个独立的 Pi CLI 子进程，而是在 <code>raft-computer</code> daemon 进程内加载内置的 Pi SDK 来运行 agent。Pi SDK 通过 OpenAI 兼容接口（<code>/v1</code>）调用 Ollama，模型与 provider 的配置读取自 <code>~/.pi/agent/models.json</code>。</p>
+
+  <div class="diagram">
+    <div class="flow-row">
+      <div class="flow-box">Raft Agent<br><small>runtime = pi</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Pi SDK<br><small>daemon 内</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">OpenAI 兼容接口<br><small>/v1</small></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Ollama<br><small>本地 / 局域网</small></div>
+    </div>
+  </div>
+
+  <p><strong>前置条件：</strong></p>
+  <ul>
+    <li>服务端：安装 Ollama 并已拉取目标模型</li>
+    <li>客户端：已安装并运行 <code>raft-computer</code></li>
+    <li>模型规模建议 27B 及以上（8B 级别的指令遵循能力不足以稳定驱动 agent，原因见排查表）</li>
+    <li>局域网部署时，客户端与服务端网络互通</li>
+  </ul>
+
+  <h2><span class="no">02</span>第一步：让 Ollama 可被访问（服务端）</h2>
+  <p>如果 Ollama 与 <code>raft-computer</code> 在同一台机器上，用 <code>localhost</code> 即可，跳过本节。</p>
+  <p>Ollama 默认只监听 <code>localhost</code>，局域网内的其他机器访问不到。需要让它监听所有网卡：</p>
+<pre># 设置 Ollama 监听所有接口
+launchctl setenv OLLAMA_HOST "0.0.0.0:11434"
+
+# 重启 Ollama 使配置生效
+
+# 验证 LAN 可达（返回模型列表即成功）
+curl http://&lt;studio-ip&gt;:11434/v1/models</pre>
+
+  <h2><span class="no">03</span>第二步：配置 Pi 的模型 provider（客户端）</h2>
+  <p>编辑 <code>~/.pi/agent/models.json</code>，添加一个 Ollama provider：</p>
+<pre>{
+  "providers": {
+    "local-ollama": {
+      "baseUrl": "http://&lt;ollama-host&gt;:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "models": [
+        {
+          "id": "qwen3:27b",
+          "name": "Local Ollama / qwen3:27b",
+          "reasoning": false,
+          "input": ["text"],
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "contextWindow": 262144,
+          "maxTokens": 32768,
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false
+          }
+        }
+      ]
+    }
+  }
+}</pre>
+
+  <p>几个字段说明：</p>
+  <ul>
+    <li><strong>baseUrl</strong>：同机用 <code>http://localhost:11434/v1</code>，局域网用 <code>http://&lt;ollama-host&gt;:11434/v1</code>，注意末尾的 <code>/v1</code>。</li>
+    <li><strong>api</strong>：必须是 <code>"openai-completions"</code>，Ollama 兼容 OpenAI 接口。</li>
+    <li><strong>apiKey</strong>：填 <code>"ollama"</code> 即可，Ollama 不校验，但字段不能为空。</li>
+    <li><strong>contextWindow</strong>：要与模型实际值一致，通过 <code>ollama show &lt;model&gt;</code> 查询。设小了会报 <code>input too large</code>。</li>
+    <li><strong>compat.supportsStore / supportsDeveloperRole</strong>：设为 <code>false</code>，Ollama 不支持这些 OpenAI 扩展特性。</li>
+  </ul>
+
+  <h2><span class="no">04</span>第三步：在 Raft 中选择模型</h2>
+  <p>在 agent 设置中：</p>
+  <ul>
+    <li>Runtime 选择 <strong>Pi</strong>（不是"Built-in Pi"）</li>
+    <li>Model 选择刚配置的 provider / 模型，如 <code>local-ollama/qwen3:27b</code></li>
+    <li>保存后 Restart agent，并选择 <strong>New session</strong></li>
+  </ul>
+
+  <div class="callout"><strong>切换模型后必须开 New session。</strong>如果选择 Continue / Migrate，会复用旧 session，把之前超时留下的错误状态带进来，导致 agent 反复崩溃。</div>
+
+  <h2><span class="no">05</span>第四步：解决大模型超时（关键坑）</h2>
+  <p>如果你用的是 27B 以上的大模型，大概率会遇到这个问题。</p>
+  <p><strong>现象：</strong>agent 每次 API 调用约 30 秒后报 <code>Request timed out.</code>，session 日志显示 <code>input: 0, output: 0</code>（一个 token 都没收到就断了）。8B 小模型正常，但 27B 大模型一调就超时；本地 Pi CLI 和 curl 直连 Ollama 都正常。</p>
+  <p><strong>根因：</strong>这是 <code>raft-computer</code> daemon 的一个超时配置缺陷。daemon 为 Pi runtime 创建隔离的 HTTP 客户端时，设置了 <code>bodyTimeoutMs: 0</code>（不限制 body 传输，适合 streaming），却漏传了 <code>headersTimeoutMs</code>，于是 fallback 到默认值 30 秒。这个值是 undici 的 <code>headersTimeout</code>，即"从发出请求到收到第一个响应头"的最大等待时间。而 27B 模型冷加载时（把 18GB 模型从磁盘读入 GPU），处理大 system prompt 需要 60 秒以上才出第一个 token，超过 30 秒就被判定超时。本地 Pi CLI 不受影响，是因为它启动时把全局 dispatcher 的 <code>headersTimeout</code> 设成了 300 秒，而 daemon 内的 Pi runtime 用的是隔离客户端，不吃全局设置。</p>
+  <p><strong>修复：</strong>通过环境变量把超时提高到 300 秒，并正确重启 daemon。</p>
+<pre># 写入 shell profile 持久化
+echo 'export SLOCK_DAEMON_FETCH_PRE_RESPONSE_TIMEOUT_MS=300000' >> ~/.bash_profile
+
+# 必须 stop + start（不能用 restart，原因见下）
+source ~/.bash_profile
+raft-computer stop &lt;server&gt;
+raft-computer start &lt;server&gt;</pre>
+
+  <div class="callout"><strong>不要用 <code>raft-computer restart</code>。</strong>restart 由旧 service 进程 fork 出新 daemon，新进程继承旧环境，读不到新设置的环境变量。必须 stop 完全终止旧进程后，从 source 过 profile 的终端重新 start。<br><br>另外：stop daemon 会连同运行在其上的 agent 一起终止。如果你自己就是这个 daemon 上的 agent，请由人工在终端执行，而不是让 agent 自己重启自己。</div>
+
+  <p><strong>验证环境变量已注入：</strong></p>
+<pre># 确认 daemon PID
+ps aux | grep "raft-computer __run" | grep -v grep
+
+# 确认环境变量已注入（替换 &lt;PID&gt;）
+ps eww -p &lt;PID&gt; | tr ' ' '\n' | grep SLOCK_DAEMON_FETCH_PRE_RESPONSE_TIMEOUT_MS
+# 应输出：SLOCK_DAEMON_FETCH_PRE_RESPONSE_TIMEOUT_MS=300000</pre>
+
+  <h2><span class="no">06</span>第五步（推荐）：让模型常驻 GPU</h2>
+  <p>Ollama 默认在模型空闲 5 分钟后自动从 GPU 卸载，下次请求需要重新冷加载（27B 约 89 秒）。如果 Ollama 是从 macOS 应用（<code>/Applications/Ollama.app</code>）启动的，shell 里的 <code>OLLAMA_KEEP_ALIVE=-1</code> 不会生效，需要用：</p>
+<pre>launchctl setenv OLLAMA_KEEP_ALIVE -1
+# 然后重启 Ollama 应用</pre>
+  <p>这样模型常驻 GPU，每次请求都是热状态，首 token 只需 2–3 秒。</p>
+
+  <h2><span class="no">07</span>常见问题排查</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>现象</th><th>原因</th><th>解决</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Request timed out.</code>（约 30 秒）</td>
+          <td>环境变量未设置，headersTimeout 默认 30s</td>
+          <td>设置 <code>SLOCK_DAEMON_FETCH_PRE_RESPONSE_TIMEOUT_MS=300000</code></td>
+        </tr>
+        <tr>
+          <td>环境变量设了但没生效</td>
+          <td>daemon 继承了旧环境</td>
+          <td>从 source 过 profile 的终端 stop + start</td>
+        </tr>
+        <tr>
+          <td>首次请求很慢（~90s）之后正常</td>
+          <td>模型冷加载</td>
+          <td>设置 <code>OLLAMA_KEEP_ALIVE=-1</code> 让模型常驻</td>
+        </tr>
+        <tr>
+          <td><code>Pi model not found: &lt;provider&gt;/&lt;model&gt;</code></td>
+          <td>models.json 格式错误或名称不一致</td>
+          <td>检查 JSON 语法、provider 名与 model id，重启 agent（新 session）</td>
+        </tr>
+        <tr>
+          <td><code>input too large</code></td>
+          <td>contextWindow 设得太小</td>
+          <td>用 <code>ollama show &lt;model&gt;</code> 取实际值填入</td>
+        </tr>
+        <tr>
+          <td>切换模型后仍崩溃</td>
+          <td>复用了旧 session</td>
+          <td>Restart agent 并选择 New session</td>
+        </tr>
+        <tr>
+          <td>小模型（8B）不超时但 agent 不回消息</td>
+          <td>8B 指令遵循能力不足，不会调用 <code>raft message send</code></td>
+          <td>使用 27B 或以上模型</td>
+        </tr>
+        <tr>
+          <td>重启后 pi 命令找不到 / Pi 报 Node.js 版本低</td>
+          <td>Node 版本不符</td>
+          <td><code>source ~/.bash_profile && nvm use default</code>；Pi 要求 Node.js ≥ 22.19.0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2><span class="no">08</span>回滚</h2>
+  <ul>
+    <li>删除 <code>~/.bash_profile</code> 中的 <code>export SLOCK_DAEMON_FETCH_PRE_RESPONSE_TIMEOUT_MS=300000</code> 一行</li>
+    <li><code>source ~/.bash_profile && raft-computer stop &lt;server&gt; && raft-computer start &lt;server&gt;</code>（headersTimeout 恢复默认 30s）</li>
+    <li>如需彻底移除 Ollama provider，删除 <code>~/.pi/agent/models.json</code> 中对应 provider 段</li>
+  </ul>
+
+  <div class="cta">
+    <p>如果你在搭建本地 AI 工作流、或者想把 agent 跑在自己的机器上，可以聊聊。</p>
+    <a class="btn" href="../index.html#contact">聊聊你的想法 →</a>
+  </div>
+</article>
+<footer>good fun studio · 谷放工作室 © 2026</footer>
+</body>
+</html>
