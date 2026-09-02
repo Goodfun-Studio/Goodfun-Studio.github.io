@@ -71,18 +71,6 @@
   <h2><span class="no">01</span>它怎么工作</h2>
   <p>先理解一件事：<code>runtime = pi</code> 并不会启动一个独立的 Pi CLI 子进程，而是在 <code>raft-computer</code> daemon 进程内加载内置的 Pi SDK 来运行 agent。Pi SDK 通过 OpenAI 兼容接口（<code>/v1</code>）调用 Ollama，模型与 provider 的配置读取自 <code>~/.pi/agent/models.json</code>。</p>
 
-  <div class="diagram">
-    <div class="flow-row">
-      <div class="flow-box">Raft Agent<br><small>runtime = pi</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-box">Pi SDK<br><small>daemon 内</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-box">OpenAI 兼容接口<br><small>/v1</small></div>
-      <span class="flow-arrow">→</span>
-      <div class="flow-box">Ollama<br><small>本地 / 局域网</small></div>
-    </div>
-  </div>
-
   <p><strong>前置条件：</strong></p>
   <ul>
     <li>服务端：安装 Ollama 并已拉取目标模型</li>
