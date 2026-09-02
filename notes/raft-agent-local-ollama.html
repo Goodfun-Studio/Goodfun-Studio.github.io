@@ -34,6 +34,7 @@
   h2 .no{color:var(--cinnabar);margin-right:10px;font-size:15px}
   p{font-size:16.5px;color:var(--ink-soft);font-weight:300;margin-bottom:18px}
   strong{font-weight:600;color:var(--ink)}
+  .arch-img{width:100%;max-width:680px;height:auto;margin:28px auto 34px;display:block;border:1px solid var(--line);border-radius:4px}
   code{font-family:var(--mono);background:var(--paper-warm);padding:2px 7px;border-radius:4px;font-size:14px}
   ul{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
   li{margin-bottom:8px}
@@ -70,6 +71,8 @@
 
   <h2><span class="no">01</span>它怎么工作</h2>
   <p>先理解一件事：<code>runtime = pi</code> 并不会启动一个独立的 Pi CLI 子进程，而是在 <code>raft-computer</code> daemon 进程内加载内置的 Pi SDK 来运行 agent。Pi SDK 通过 OpenAI 兼容接口（<code>/v1</code>）调用 Ollama，模型与 provider 的配置读取自 <code>~/.pi/agent/models.json</code>。</p>
+
+  <img src="raft-agent-arch.png" alt="Raft Agent 通过 Pi SDK 调用 Ollama 的架构图" class="arch-img">
 
   <p><strong>前置条件：</strong></p>
   <ul>
