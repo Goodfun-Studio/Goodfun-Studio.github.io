@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>“0 天可售”不等于断货：库存分析里最容易下错的三个结论 · good fun 谷放</title>
+<meta name="description" content="一篇库存分析的方法论笔记：为什么“某个规格可售 0 天”不等于断货，为什么瓶颈常常不在采购，以及怎么用一份陷阱清单把判断规则变成可检查的东西。">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;--ink-soft:#3a3733;--ink-faint:#6b6660;
+    --paper:#f4f1ea;--paper-warm:#ece6d8;
+    --cinnabar:#a8332a;--cinnabar-soft:#c25a4a;
+    --line:rgba(26,26,26,.12);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+    --w:820px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--serif);color:var(--ink);background:var(--paper);line-height:1.9;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 28px}
+  header.nav{padding:28px 0;border-bottom:1px solid var(--line)}
+  .back{font-size:14px;letter-spacing:1px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:8px;transition:color .3s}
+  .back:hover{color:var(--cinnabar)}
+  article{padding:60px 0 100px}
+  .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
+  .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
+  h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
+  h2 .no{color:var(--cinnabar);margin-right:10px;font-size:15px}
+  p{font-size:16.5px;color:var(--ink-soft);font-weight:300;margin-bottom:18px}
+  strong{font-weight:600;color:var(--ink)}
+  ul{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
+  li{margin-bottom:8px}
+  .callout{border-left:3px solid var(--cinnabar);padding:18px 24px;margin:30px 0;background:rgba(255,255,255,.4);font-size:15.5px;color:var(--ink-soft)}
+  .diagram{border:1px solid var(--line);border-radius:6px;padding:30px 26px;margin:30px 0;background:rgba(255,255,255,.35)}
+  .flow-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;letter-spacing:.5px}
+  .flow-box{border:1.5px solid var(--ink);border-radius:4px;padding:12px 16px;background:var(--paper);text-align:center;flex:1;min-width:120px}
+  .flow-arrow{color:var(--cinnabar-soft);font-size:18px}
+  .cta{margin-top:70px;padding:34px 30px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.4);text-align:center}
+  .cta p{margin-bottom:16px}
+  .btn{display:inline-flex;padding:13px 30px;font-size:15px;letter-spacing:2px;border:1.5px solid var(--ink);border-radius:2px;background:var(--ink);color:var(--paper);transition:all .3s}
+  .btn:hover{background:var(--cinnabar);border-color:var(--cinnabar)}
+  footer{text-align:center;padding:40px 0;font-size:13px;color:var(--ink-faint);border-top:1px solid var(--line)}
+  @media(max-width:560px){.flow-row{flex-direction:column}.flow-arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="back" href="../index.html#notes">← 回到 good fun 谷放</a></div></header>
+<article class="wrap">
+  <span class="tag">数据分析</span>
+  <h1>“0 天可售”不等于断货：库存分析里最容易下错的三个结论</h1>
+  <p class="meta">技术笔记 · good fun 谷放</p>
+
+  <p>先看一个很常见的场景：一个多规格的商品，其中一个规格的可售天数显示 0。机械的做法会把它直接列进“断货预警”，排到补货清单的最前面。但把数据再拆一层会发现，这个商品整体上还有货——本地仓、在途都有——真正该做的是入仓和调拨，而不是再下一张采购单。</p>
+  <p>数字本身都是对的，错的是从数字到结论的那一步。这篇笔记整理我用得最多的三条判断规矩，以及怎么验证它们真的在起作用。</p>
+
+  <h2><span class="no">01</span>坑一：把“某个规格没货”当成“这个商品要断货”</h2>
+  <p>多规格商品在库存系统里通常是一棵树：一个母体下面挂着多个子体。可售天数、库存、在途这些指标，挂在不同层级上，含义完全不同。子体层面的“可售 0 天”，只说明“这个规格当下没有可立即发货的库存”，不等于“这个商品断货”。</p>
+  <p>所以判断之前先做一次追因：可售为 0，是因为确实卖空了，还是因为货压在本地仓没入、在途还没到、或者分散在别的仓库？追因追到“货在哪”这一步，动作才会对——该入仓的入仓，该调拨的调拨，确实卖空的，才谈采购。</p>
+  <div class="callout">先追因，再排序。追因没有完成之前，任何“紧急程度”的排序都不作数。</div>
+
+  <h2><span class="no">02</span>坑二：拿到数据，直接排“先补谁”</h2>
+  <p>第二个坑更隐蔽：数据核过了、追因也做了，于是开始排“先补哪个”。排序本身没有错，但如果瓶颈不在采购环节，优先级排得再细，也只是在错误的队伍里排队。</p>
+  <p>库存问题的瓶颈，很多时候出现在流转环节：入仓预约、仓间调拨、上架节奏。这些环节不疏通，采购单下得再准，也只是把货堆到更远的地方。所以我现在的顺序是：<strong>先找瓶颈在哪一环，再决定“先做哪个”。</strong></p>
+  <ul>
+    <li>瓶颈在入仓——先解决入仓，而不是先比谁的补货量大；</li>
+    <li>瓶颈在调拨——先把仓间的货盘活，采购往后放；</li>
+    <li>确认采购是限制环节了——这时的排序才有意义。</li>
+  </ul>
+  <div class="diagram">
+    <div class="flow-row">
+      <div class="flow-box">先把口径核清</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">再找瓶颈在哪</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">才排“先做哪个”</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">最后验收发布</div>
+    </div>
+  </div>
+
+  <h2><span class="no">03</span>坑三：“少压库存”不能单边说</h2>
+  <p>第三个坑表面上是措辞问题，其实会直接影响动作。“降库存”听起来永远是好事，但如果单边执行，很容易滑成“该备的也不备”——短期省了资金占用，长期丢的是产出。</p>
+  <p>我后来给自己定了两条：</p>
+  <ul>
+    <li><strong>“少压库存”必须带前提</strong>：在不断掉有效产出的前提下，少压不该压的钱。两句话必须一起说，不能只留前半句。</li>
+    <li><strong>不覆盖上游系统的建议值</strong>：补货数量沿用上游系统给出的原始建议值；我只决定“先做哪个、为什么”，不另算一套数字去覆盖屏幕上已有的值。两个口径打架的时候，现场反而无法执行。</li>
+  </ul>
+
+  <h2><span class="no">04</span>怎么验证这套规则真的在起作用</h2>
+  <p>规则只写在文档里没有意义，能被检查才算数。我的检验方式是一场“陷阱对照”：事先列一份清单，把库存分析里最容易下错结论的场景收进去——比如“某个规格可售为 0、但整体库存在别处”“瓶颈不在采购环节”这类——然后用同一批数据、同一批问题，跑三种做法对照：</p>
+  <ul>
+    <li>纯机械排序：16 条陷阱里躲过 1 条；</li>
+    <li>我之前的做法：躲过 12 条；</li>
+    <li>加上这三条规矩：16 条。</li>
+  </ul>
+  <p>边界写得比数字更重要：这是我自己做的对照测试，单一数据快照、非双盲，例子做了合成处理。它说明的是“这几条规则在判断上确实有差别”，不是真实环境下的效果保证。</p>
+
+  <h2><span class="no">05</span>把判断变成可检查的规则</h2>
+  <p>这三条规矩背后有一个共性：它们都不是“更聪明的算法”，而是在数字和结论之间加了一道检查——先核口径，再判断，最后验收。</p>
+  <p>把判断变成规则之后，还有个工程上的好处：规则一旦可以被引用，就能被验收、被复盘。每条结论都能答出“按的是哪条规则”；新场景来了，只能把规则收紧，不能偷偷放宽。这套形态放到任何“数据很多、结论难下”的系统里都成立——库存只是其中一个例子。</p>
+  <div class="callout">数据不缺的时候，真正稀缺的是从数据到结论中间那一层：判断规则本身。</div>
+
+  <div class="cta">
+    <p>如果你也在处理类似的问题——数据不少，但结论总差最后一层——可以先聊聊你的判断环节卡在哪。</p>
+    <a class="btn" href="../index.html#contact">聊聊你的想法 →</a>
+  </div>
+</article>
+<footer>good fun studio · 谷放工作室 © 2026</footer>
+</body>
+</html>
