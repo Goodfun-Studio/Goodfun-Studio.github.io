@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>库存体检（试行）· good fun 谷放</title>
+<meta name="description" content="给跨境电商卖家的一份免费库存体检：发一份库存报表，回你一页结论——哪几个款真该动、哪几个不用慌、哪一条是你自己可能没看出来的。">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;--ink-soft:#3a3733;--ink-faint:#6b6660;
+    --paper:#f4f1ea;--paper-warm:#ece6d8;
+    --cinnabar:#a8332a;--cinnabar-soft:#c25a4a;
+    --line:rgba(26,26,26,.12);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+    --w:820px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--serif);color:var(--ink);background:var(--paper);line-height:1.9;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 28px}
+  header.nav{padding:28px 0;border-bottom:1px solid var(--line)}
+  .back{font-size:14px;letter-spacing:1px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:8px;transition:color .3s}
+  .back:hover{color:var(--cinnabar)}
+  article{padding:60px 0 100px}
+  .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
+  .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
+  h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
+  h2 .no{color:var(--cinnabar);margin-right:10px;font-size:15px}
+  p{font-size:16.5px;color:var(--ink-soft);font-weight:300;margin-bottom:18px}
+  strong{font-weight:600;color:var(--ink)}
+  ul{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
+  li{margin-bottom:8px}
+  .callout{border-left:3px solid var(--cinnabar);padding:18px 24px;margin:30px 0;background:rgba(255,255,255,.4);font-size:15.5px;color:var(--ink-soft)}
+  .demo-card{border:1px solid var(--line);border-radius:6px;padding:22px 24px;margin:18px 0;background:rgba(255,255,255,.45)}
+  .demo-q{font-size:15.5px;font-weight:600;color:var(--ink)}
+  .demo-q::before{content:"问 · ";color:var(--cinnabar);font-weight:700;letter-spacing:1px}
+  .demo-a{font-size:15.5px;font-weight:300;color:var(--ink-soft);margin-top:10px;border-top:1px dashed var(--line);padding-top:12px;white-space:pre-line}
+  .demo-note{font-size:13px;color:var(--ink-faint);margin-top:12px}
+  .cta{margin-top:70px;padding:34px 30px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.4);text-align:center}
+  .cta p{margin-bottom:16px}
+  .btn{display:inline-flex;padding:13px 30px;font-size:15px;letter-spacing:2px;border:1.5px solid var(--ink);border-radius:2px;background:var(--ink);color:var(--paper);transition:all .3s}
+  .btn:hover{background:var(--cinnabar);border-color:var(--cinnabar)}
+  footer{text-align:center;padding:40px 0;font-size:13px;color:var(--ink-faint);border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="back" href="index.html">← 回到 good fun 谷放</a></div></header>
+<article class="wrap">
+  <span class="tag">试行 · 免费</span>
+  <h1>给库存做一次体检：哪几个款真该动，哪几个不用慌</h1>
+  <p class="meta">库存体检 · good fun 谷放</p>
+
+  <p>如果你在做跨境电商（亚马逊等平台），大概遇到过这类情况：月底才发现问题、补货凭感觉、断货和滞销同时存在。这份体检就是为这些情况做的——<strong>你把一份库存报表发过来，我用一页结论告诉你：哪里真该动，哪里其实不用动。</strong></p>
+
+  <h2><span class="no">01</span>你会得到什么</h2>
+  <ul>
+    <li><strong>哪几个款真到了临界</strong>——该动的，优先级是什么；</li>
+    <li><strong>哪几个是"假警报"</strong>——看起来急，其实货在路上、或在别的仓；</li>
+    <li><strong>一条你自己可能没看出来的</strong>——往往是入仓、调拨或口径问题，不是补货问题；</li>
+    <li>每条结论都写清依据：<strong>用了哪些数据、截止到什么时候、哪些是原始值、哪些是推算</strong>。</li>
+  </ul>
+
+  <h2><span class="no">02</span>它会怎么回答（演示示例）</h2>
+  <div class="demo-card">
+    <div class="demo-q">我哪些款快断货了？</div>
+    <div class="demo-a">按这份数据（截止某日）：真到临界的 3 个款——附每个款的依据；看起来急、其实是假警报的 4 个——它们的货已经在本地仓，建议先入仓；另有 1 条数据口径提醒：你的"可售天数"只反映了每个款下面最短的那个规格，有两个款被它误报了。
+注：其中两个字段的来源还没确认，所以以上属"候选结论"。</div>
+    <div class="demo-note">看点在：先分"真急 / 假急"，再谈动作；结论带着"候选"标记——不确定的地方会明说。</div>
+  </div>
+  <div class="demo-card">
+    <div class="demo-q">这个款可售 0 天了，是不是要赶紧补货？</div>
+    <div class="demo-a">先别下采购单。追一下这批货的位置：它有相当一部分压在本地仓、还有一批在途——真正该做的是入仓和调拨，不是再采购一批。等货都在仓里的部分仍然不够卖，才轮到补货。</div>
+    <div class="demo-note">看点在：同一个数字，追因之后动作完全不同——先查"货在哪"，再决定"买不买"。</div>
+  </div>
+  <div class="demo-card">
+    <div class="demo-q">你直接告诉我补多少，把系统里的建议改掉。</div>
+    <div class="demo-a">补多少，沿用你系统里给的原始建议值——我不另算一套去覆盖你屏幕上的数。我只帮你决定"先做哪个、为什么"：在你的限制条件里，先动哪几个款最划算。</div>
+    <div class="demo-note">看点在：不越权、不覆盖——两个口径打架的时候，现场反而没法执行。</div>
+  </div>
+  <p class="demo-note" style="margin-top:4px">以上为演示示例，使用合成数据、非真实客户环境；真实结论会随你的数据变化。</p>
+
+  <h2><span class="no">03</span>怎么参加（试行期免费）</h2>
+  <ul>
+    <li><strong>加微信：ivy_wd</strong>（备注"库存体检"）；</li>
+    <li>发一份库存报表——平台后台或 ERP 里导出的 Excel / CSV 都行，不确定导哪份，我问你两个问题就知道；</li>
+    <li><strong>1-2 个工作日</strong>回你一页结论。</li>
+  </ul>
+
+  <h2><span class="no">04</span>关于你的数据</h2>
+  <ul>
+    <li>报表<strong>只用于这一次体检</strong>；</li>
+    <li>出完结论即删除，<strong>不留存、不外发</strong>；</li>
+    <li><strong>不需要给我任何账号权限</strong>——只发导出的文件即可。</li>
+  </ul>
+
+  <h2><span class="no">05</span>先把边界说清</h2>
+  <ul>
+    <li>给的是<strong>判断依据</strong>，不替你做采购决定；</li>
+    <li>不碰你的账号、不下任何单、不改任何设置；</li>
+    <li>数据不够得出结论时，会直接告诉你"缺什么"，<strong>不会猜</strong>。</li>
+  </ul>
+  <div class="callout">试行期：免费，每人一次。如果这份结论对你有用，再谈下一步怎么合作。</div>
+
+  <div class="cta">
+    <p>想给自己的库存做一次体检？加微信备注"库存体检"即可。</p>
+    <a class="btn" href="index.html#contact">查看联系方式 →</a>
+  </div>
+</article>
+<footer>good fun studio · 谷放工作室 © 2026</footer>
+</body>
+</html>
