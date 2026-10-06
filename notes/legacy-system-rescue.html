@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>接手“无文档、无交接”的老系统：一段抢救记录 · good fun 谷放</title>
+<meta name="description" content="一次老系统抢救的完整记录：为什么从“生产只读”起步、两个典型案例（被图层盖住的 UI 事故、“修好了”却没留在代码里的修复），以及一份可以照着走的接手清单。">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;--ink-soft:#3a3733;--ink-faint:#6b6660;
+    --paper:#f4f1ea;--paper-warm:#ece6d8;
+    --cinnabar:#a8332a;--cinnabar-soft:#c25a4a;
+    --line:rgba(26,26,26,.12);
+    --serif:"Noto Serif SC","Songti SC","STSong",serif;
+    --w:820px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--serif);color:var(--ink);background:var(--paper);line-height:1.9;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--w);margin:0 auto;padding:0 28px}
+  header.nav{padding:28px 0;border-bottom:1px solid var(--line)}
+  .back{font-size:14px;letter-spacing:1px;color:var(--ink-faint);display:inline-flex;align-items:center;gap:8px;transition:color .3s}
+  .back:hover{color:var(--cinnabar)}
+  article{padding:60px 0 100px}
+  .tag{font-size:12px;letter-spacing:2px;color:var(--cinnabar);border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+  h1{font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:1px;line-height:1.35;margin:24px 0 14px}
+  .meta{font-size:13px;letter-spacing:1px;color:var(--ink-faint);margin-bottom:44px}
+  h2{font-size:23px;font-weight:700;letter-spacing:1px;margin:52px 0 18px;color:var(--ink)}
+  h2 .no{color:var(--cinnabar);margin-right:10px;font-size:15px}
+  p{font-size:16.5px;color:var(--ink-soft);font-weight:300;margin-bottom:18px}
+  strong{font-weight:600;color:var(--ink)}
+  ul{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
+  ol{margin:0 0 18px 22px;color:var(--ink-soft);font-weight:300;font-size:16.5px}
+  li{margin-bottom:8px}
+  .callout{border-left:3px solid var(--cinnabar);padding:18px 24px;margin:30px 0;background:rgba(255,255,255,.4);font-size:15.5px;color:var(--ink-soft)}
+  .diagram{border:1px solid var(--line);border-radius:6px;padding:30px 26px;margin:30px 0;background:rgba(255,255,255,.35)}
+  .stack{display:flex;flex-direction:column;gap:10px;font-size:14px;letter-spacing:.5px;max-width:560px;margin:0 auto}
+  .stack-box{border:1.5px solid var(--ink);border-radius:4px;padding:12px 16px;background:var(--paper);text-align:center}
+  .stack-note{text-align:center;color:var(--cinnabar-soft);font-size:13px;letter-spacing:1px}
+  .cta{margin-top:70px;padding:34px 30px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.4);text-align:center}
+  .cta p{margin-bottom:16px}
+  .btn{display:inline-flex;padding:13px 30px;font-size:15px;letter-spacing:2px;border:1.5px solid var(--ink);border-radius:2px;background:var(--ink);color:var(--paper);transition:all .3s}
+  .btn:hover{background:var(--cinnabar);border-color:var(--cinnabar)}
+  footer{text-align:center;padding:40px 0;font-size:13px;color:var(--ink-faint);border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="back" href="../index.html#notes">← 回到 good fun 谷放</a></div></header>
+<article class="wrap">
+  <span class="tag">工程实践</span>
+  <h1>接手“无文档、无交接”的老系统：一段抢救记录</h1>
+  <p class="meta">技术笔记 · good fun 谷放</p>
+
+  <p>企业里有一种活儿很少被写：不是从零开发，也不是常规迭代，而是接手一套<strong>没人交底的老系统</strong>——上一任开发者退场、文档为零、而它还在线上跑着。</p>
+  <p>在协助维护老系统时，我们曾接手过类似的项目（细节已泛化处理）：一个培训类小程序上的集成半成品，要求是“先让它稳下来，再继续往下做”。这篇笔记记录这次抢救里最有复用价值的部分：<strong>方法、踩过的两个坑、一份可以带走的清单。</strong></p>
+
+  <h2><span class="no">01</span>先立规矩：生产环境从“只读”起步</h2>
+  <p>接老系统的第一大忌，是上来就改。我们给自己立的规矩是三句话：</p>
+  <ul>
+    <li>所有诊断改动<strong>只加日志</strong>，不改业务逻辑；</li>
+    <li>进生产前先想好<strong>怎么回滚</strong>；</li>
+    <li>先读代码、先看日志，把“系统本来的样子”摸清楚，再动手。</li>
+  </ul>
+  <p>老系统的每一次改动，都可能踩中你不会知道的依赖。摸清现状的成本，永远低于误伤之后的修复成本。</p>
+
+  <h2><span class="no">02</span>案例一：藏在“眼皮底下”的 UI 事故</h2>
+  <p>现象：用户点击一个按钮，弹层死活不出现；日志、接口、数据全都正常。</p>
+  <p>根因：一个<strong>全局公共弹层</strong>在历次改版里层级被叠到了很高（近千），而业务弹层只有几十——内容一直都在，只是被“盖住了”。</p>
+  <div class="diagram">
+    <div class="stack">
+      <div class="stack-box">公共组件层：历次改版叠上来的</div>
+      <div class="stack-note">↓ 盖住了 ↓</div>
+      <div class="stack-box">业务弹层：内容都在，只是出不来</div>
+    </div>
+  </div>
+  <p>三条教训：</p>
+  <ul>
+    <li>复杂系统里，“看不见”的问题不一定是功能坏了，可能是<strong>被别的图层盖住</strong>；</li>
+    <li>排查顺序可以从最笨的地方开始：<strong>先查“谁盖住了谁”</strong>，再往业务逻辑里找；</li>
+    <li>公共组件的一次“顺手升级”，半年后可能以完全无关的 bug 形式冒出来——<strong>公共层的每次变更都值得留痕</strong>。</li>
+  </ul>
+
+  <h2><span class="no">03</span>案例二：“修好了”却没有留在代码里</h2>
+  <p>现象：一个早已判定修复的问题，过一阵又冒了出来。</p>
+  <p>追查：翻代码历史后发现——当初“修好了”的结论没错，但<strong>那次的修复从来没有被写成代码</strong>；顺带还认出几段“在跑、但结果没人用”的死代码。</p>
+  <p>两条教训：</p>
+  <ul>
+    <li><strong>“告知过的修复”不等于“代码里的修复”。</strong>接手老系统时，把它当成一次对账：把“应该已经修了”的项逐条拿到代码里核对；</li>
+    <li>如果交付只停在“我改了什么”的口头交代，下一个接手的人还会再踩一遍。<strong>改动、结论、验证方式，都落进版本记录。</strong></li>
+  </ul>
+
+  <h2><span class="no">04</span>一份可以带走的清单</h2>
+  <p>接手“无文档、无交接”的系统时，我们会按这份清单过一遍：</p>
+  <ol>
+    <li>生产只读起步：先日志后改动，改动必带回滚；</li>
+    <li>现状盘点：关键路径（登录 / 支付 / 核心业务）逐条走通；</li>
+    <li>“声称已修”的项：逐条到代码里核对；</li>
+    <li>层级 / 公共组件类问题：先查“谁盖住谁”，再查业务逻辑；</li>
+    <li>每次改动：最小面、可回滚、留痕迹（改了什么 + 为什么 + 怎么验证）；</li>
+    <li>交出去时：写清现状与坑，让下一位接手的人不用从零考古。</li>
+  </ol>
+
+  <h2>结语</h2>
+  <p>这类项目的价值不在“会写代码”，而在<strong>能在不确定的环境里把问题一条条钉死、把系统安全地扶起来</strong>。如果你手上也有这样一套“没人交接、还得继续用”的系统，欢迎聊聊。</p>
+
+  <div class="cta">
+    <p>如果你手上也有一套“没人交接、还得继续用”的系统，可以先聊聊现在最卡的地方。</p>
+    <a class="btn" href="../index.html#contact">聊聊你的系统 →</a>
+  </div>
+</article>
+<footer>good fun studio · 谷放工作室 © 2026</footer>
+</body>
+</html>
